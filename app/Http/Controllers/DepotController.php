@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 
 class DepotController extends Controller
 {
+    /**
+     * Display a listing of depots with search, filters, and coordinates for Leaflet map.
+     */
     public function index(Request $request)
     {
         $query = Depot::with(['products']);
@@ -118,6 +121,9 @@ class DepotController extends Controller
         ]);
     }
 
+    /**
+     * Display single depot details (Dinkes certificate, lab test, water products, reviews).
+     */
     public function show(string $slug)
     {
         $query = Depot::with(['products', 'reviews' => function ($q) {
@@ -134,6 +140,10 @@ class DepotController extends Controller
             'depot' => $depot,
         ]);
     }
+
+    /**
+     * API endpoint returning depots for dynamic AJAX map queries.
+     */
     public function apiDepots(Request $request)
     {
         $userLat = $request->input('lat');
@@ -171,10 +181,10 @@ class DepotController extends Controller
 
         return response()->json($depots);
     }
-        /**
-     * Menghitung jarak garis lurus GPS menggunakan Rumus Haversine (dalam satuan KM).
+
+    /**
+     * Calculates the great-circle distance between two points in kilometers.
      */
-    
     private function haversineGreatCircleDistance($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo, $earthRadius = 6371)
     {
         $latFrom = deg2rad($latitudeFrom);

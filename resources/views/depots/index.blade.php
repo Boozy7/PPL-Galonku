@@ -111,42 +111,6 @@
                 <!-- Hidden inputs for preserving GPS lat/lng across filters -->
                 <input type="hidden" name="lat" id="formLat" value="{{ $userLat }}">
                 <input type="hidden" name="lng" id="formLng" value="{{ $userLng }}">
-
-                <!-- Filter Controls Row -->
-                <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
-
-                    <!-- Dinkes Certified Toggle Pill -->
-                    <label class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border transition {{ $currentCertified ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' }}">
-                        <input type="checkbox" name="certified" value="1" {{ $currentCertified ? 'checked' : '' }} onchange="document.getElementById('filterForm').submit()" class="rounded text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5">
-                        <span>✓ Lulus Uji Dinkes</span>
-                    </label>
-
-                    <!-- Water Type Select -->
-                    <select name="type" onchange="document.getElementById('filterForm').submit()"
-                            class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        <option value="all" {{ empty($currentType) || $currentType === 'all' ? 'selected' : '' }}>Semua Jenis Air</option>
-                        <option value="ro" {{ $currentType === 'ro' ? 'selected' : '' }}>Reverse Osmosis (RO)</option>
-                        <option value="mineral" {{ $currentType === 'mineral' ? 'selected' : '' }}>Air Mineral</option>
-                        <option value="alkaline" {{ $currentType === 'alkaline' ? 'selected' : '' }}>Air Alkali</option>
-                    </select>
-
-                    <!-- District Select -->
-                    <select name="district" onchange="document.getElementById('filterForm').submit()"
-                            class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        <option value="all">Kecamatan (Semua)</option>
-                        @foreach($districts as $d)
-                            <option value="{{ $d }}" {{ $currentDistrict === $d ? 'selected' : '' }}>{{ $d }}</option>
-                        @endforeach
-                    </select>
-
-                    <!-- Sort -->
-                    <select name="sort" onchange="document.getElementById('filterForm').submit()"
-                            class="ml-auto px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        <option value="rating_desc" {{ $currentSort === 'rating_desc' ? 'selected' : '' }}>Rating Tertinggi</option>
-                        <option value="distance_asc" {{ $currentSort === 'distance_asc' ? 'selected' : '' }}>Jarak Terdekat</option>
-                        <option value="name_asc" {{ $currentSort === 'name_asc' ? 'selected' : '' }}>Nama (A - Z)</option>
-                    </select>
-                </div>
             </form>
         </div>
 
