@@ -18,3 +18,10 @@ Route::delete('depot/products/{id}', [DepotDashboardController::class, 'deletePr
 // SCRUM-53: Form Pemesanan (Customer)
 Route::get('order/{depotId}', [OrderController::class, 'create'])->name('orders.create');
 Route::post('order', [OrderController::class, 'store'])->name('orders.store');
+
+// SCRUM-56: Manajemen Antrean Depot & Tracking
+Route::get('depot', [DepotDashboardController::class, 'index'])->name('depot.dashboard');
+Route::post('depot/toggle-status', [DepotDashboardController::class, 'toggleStatus'])->name('depot.toggle_status');
+Route::post('depot/order/{id}/status', [DepotDashboardController::class, 'updateOrderStatus'])->name('depot.update_order_status');
+Route::get('order/track/{orderNumber}', [OrderController::class, 'track'])->name('orders.track');
+Route::get('antrean', [OrderController::class, 'index'])->name('orders.index');

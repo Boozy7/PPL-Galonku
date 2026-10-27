@@ -11,60 +11,6 @@ use Illuminate\Support\Str;
 class OrderController extends Controller
 {
     /**
-     * Display list of current / active orders.
-     */
-    public function index(Request $request)
-    {
-        $search = trim($request->input('search', ''));
-
-        if ($search !== '') {
-            $foundOrder = Order::with('depot')
-                ->where('order_number', $search)
-                ->orWhere('queue_number', $search)
-                ->orWhere('queue_number', '#' . ltrim($search, '#'))
-                ->orWhere('customer_phone', $search)
-                ->latest()
-                ->first();
-
-            if (!$foundOrder) {
-                $foundOrder = Order::with('depot')
-                    ->whereRaw('LOWER(order_number) = ?', [strtolower($search)])
-                    ->orWhereRaw('LOWER(queue_number) = ?', [strtolower($search)])
-                    ->orWhereRaw('LOWER(queue_number) = ?', ['#' . strtolower(ltrim($search, '#'))])
-                    ->latest()
-                    ->first();
-            }
-
-            if ($foundOrder) {
-                return redirect()->route('orders.track', $foundOrder->order_number);
-            }
-
-            return redirect()->route('orders.index')
-                ->with('error', "Antrean dengan nomor '{$search}' tidak ditemukan. Silakan periksa kembali.");
-        }
-
-        // Get orders from session
-        $sessionOrders = session()->get('my_order_numbers', []);
-        $orders = collect();
-
-        if (!empty($sessionOrders)) {
-            $orders = Order::with('depot')
-                ->whereIn('order_number', $sessionOrders)
-                ->latest()
-                ->get();
-        }
-
-        // Fallback: If no orders in session (or new session), show today's / recent orders so user immediately sees their order
-        if ($orders->isEmpty()) {
-            $orders = Order::with('depot')->latest()->take(6)->get();
-        }
-
-        return view('orders.index', [
-            'orders' => $orders,
-        ]);
-    }
-
-    /**
      * Show pickup order form for a specific depot.
      */
     public function create(int $depotId)
@@ -173,63 +119,6 @@ class OrderController extends Controller
     }
 
     /**
-     * Real-time tracking view for an order.
-     */
-    public function track(string $orderNumber)
-    {
-        $clean = trim($orderNumber);
-
-        // Search by order_number or queue_number (e.g. #A-04 or A-04)
-        $order = Order::with('depot')
-            ->where('order_number', $clean)
-            ->orWhere('queue_number', $clean)
-            ->orWhere('queue_number', '#' . ltrim($clean, '#'))
-            ->latest()
-            ->first();
-
-        if (!$order) {
-            $order = Order::with('depot')
-                ->whereRaw('LOWER(order_number) = ?', [strtolower($clean)])
-                ->orWhereRaw('LOWER(queue_number) = ?', [strtolower($clean)])
-                ->orWhereRaw('LOWER(queue_number) = ?', ['#' . strtolower(ltrim($clean, '#'))])
-                ->latest()
-                ->first();
-        }
-
-        if (!$order) {
-            return redirect()->route('orders.index')
-                ->with('error', "Antrean dengan nomor '{$orderNumber}' tidak ditemukan.");
-        }
-
-        // Remember in session
-        $myOrders = session()->get('my_order_numbers', []);
-        if (!in_array($order->order_number, $myOrders)) {
-            $myOrders[] = $order->order_number;
-            session()->put('my_order_numbers', array_values(array_unique($myOrders)));
-        }
-
-        // Canonical redirect if accessed via queue_number (e.g. #A-04)
-        if ($clean !== $order->order_number) {
-            return redirect()->route('orders.track', $order->order_number);
-        }
-
-        // Check if there are orders ahead in queue
-        $ordersAhead = Order::where('depot_id', $order->depot_id)
-            ->whereIn('status', ['DITERIMA', 'SEDANG_DIISI'])
-            ->where('id', '<', $order->id)
-            ->count();
-
-        // Direct Google Maps Route URL
-        $googleMapsUrl = "https://www.google.com/maps/dir/?api=1&destination=" . urlencode("{$order->depot->lat},{$order->depot->lng}") . "&travelmode=driving";
-
-        return view('orders.track', [
-            'order' => $order,
-            'ordersAhead' => $ordersAhead,
-            'googleMapsUrl' => $googleMapsUrl,
-        ]);
-    }
-
-    /**
      * Advance status simulation (for demo / testing workflow).
      */
     public function advanceStatus(string $orderNumber)
@@ -248,5 +137,27 @@ class OrderController extends Controller
             return redirect()->route('orders.track', $order->order_number)
                 ->with('status_updated', "Status antrean direset ke: Menunggu Antrean (Diterima).");
         }
+    }
+
+    /**
+     * Pelacakan status antrean pesanan (Customer)
+     */
+    public function track(string $orderNumber)
+    {
+        $order = Order::with('depot')->where('order_number', $orderNumber)->firstOrFail();
+        return view('orders.track', compact('order'));
+    }
+
+    /**
+     * Halaman daftar antrean masuk
+     */
+    public function index()
+    {
+        $orders = Order::with('depot')
+            ->orderBy('created_at', 'desc')
+            ->take(20)
+            ->get();
+
+        return view('orders.index', compact('orders'));
     }
 }
