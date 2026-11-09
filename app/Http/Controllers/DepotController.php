@@ -47,13 +47,22 @@ class DepotController extends Controller
 
         // Sorting
         $sort = $request->input('sort', 'name_asc');
-        if ($sort === 'name_asc') {
+        if ($sort === 'rating_desc') {
+            $query->orderByDesc('rating')->orderByDesc('review_count');
+        } elseif ($sort === 'name_asc') {
             $query->orderBy('name');
         }
 
         $depots = $query->get();
 
-        // calculate distance for each depot
+        // Optional: If sorting by lowest product price
+        if ($sort === 'price_asc') {
+            $depots = $depots->sortBy(function ($d) {
+                return $d->products->min('price') ?? 999999;
+            })->values();
+        }
+
+        // Optional: If user passed lat & lng, calculate distance for each depot
         $userLat = $request->input('lat');
         $userLng = $request->input('lng');
 
