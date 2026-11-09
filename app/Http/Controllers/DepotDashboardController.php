@@ -53,6 +53,43 @@ class DepotDashboardController extends Controller
         return back()->with('success', 'Status operasional depot berhasil diubah menjadi: ' . ($depot->is_open ? 'Buka' : 'Tutup') . '.');
     }
 
+    /**
+     * Pengaturan Jadwal Jam Operasional Depot DAMIU (SCRUM-64)
+     */
+    public function updateOperationalHours(Request $request)
+    {
+        $depot = Depot::where('user_id', Auth::id())->firstOrFail();
+
+        $validated = $request->validate([
+            'open_time' => 'required|string|max:10',
+            'close_time' => 'required|string|max:10',
+            'days_option' => 'required|string|max:50',
+            'custom_days' => 'nullable|string|max:50',
+            'custom_note' => 'nullable|string|max:100',
+            'is_open' => 'nullable|boolean',
+        ]);
+
+        $days = $validated['days_option'] === 'Custom' && !empty($validated['custom_days']) 
+            ? $validated['custom_days'] 
+            : $validated['days_option'];
+
+        $formatted = "{$validated['open_time']} - {$validated['close_time']} WIB";
+        if ($days !== 'Setiap Hari') {
+            $formatted = "{$days} ({$formatted})";
+        }
+        if (!empty($validated['custom_note'])) {
+            $formatted .= " • " . $validated['custom_note'];
+        }
+
+        $depot->open_hours = $formatted;
+        if ($request->has('is_open')) {
+            $depot->is_open = $request->boolean('is_open');
+        }
+        $depot->save();
+
+        return back()->with('success', 'Jadwal jam operasional depot berhasil diperbarui: ' . $depot->open_hours);
+    }
+
     // Pembaruan status antrean
     public function updateOrderStatus(Request $request, $id)
     {

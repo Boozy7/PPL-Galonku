@@ -56,29 +56,97 @@
         <!-- KOLOM KIRI (1 Col): Status Toko & Dokumen Sertifikasi -->
         <div class="space-y-6">
 
-            <!-- Operasional Toko (Buka / Tutup) -->
+            <!-- Operasional Toko & Pengaturan Jadwal (SCRUM-64) -->
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Status Operasional</h3>
-                        <p class="text-[11px] text-slate-500">Buka/tutup penerimaan antrean isi ulang</p>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Status & Jadwal Operasional</h3>
+                        <p class="text-[11px] text-slate-500">Kelola jam buka, tutup, dan hari operasional toko</p>
                     </div>
                     <span class="w-2.5 h-2.5 rounded-full {{ $depot->is_open ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500' }}"></span>
                 </div>
 
+                <!-- Status Banner & Quick Toggle -->
                 <div class="p-4 rounded-2xl {{ $depot->is_open ? 'bg-emerald-50/80 border border-emerald-200' : 'bg-rose-50/80 border border-rose-200' }} flex items-center justify-between mb-4">
-                    <span class="font-extrabold text-sm {{ $depot->is_open ? 'text-emerald-900' : 'text-rose-900' }}">
-                        {{ $depot->is_open ? 'TOKO SEDANG BUKA' : 'TOKO SEDANG TUTUP' }}
-                    </span>
+                    <div>
+                        <span class="font-extrabold text-sm block {{ $depot->is_open ? 'text-emerald-900' : 'text-rose-900' }}">
+                            {{ $depot->is_open ? 'TOKO SEDANG BUKA' : 'TOKO SEDANG TUTUP' }}
+                        </span>
+                        <span class="text-[10px] {{ $depot->is_open ? 'text-emerald-700' : 'text-rose-700' }}">
+                            {{ $depot->is_open ? 'Menerima pesanan refill galon' : 'Antrean pesanan sementara dinonaktifkan' }}
+                        </span>
+                    </div>
                     <form action="{{ route('depot.toggle_status') }}" method="POST">
                         @csrf
                         <button type="submit" class="px-3.5 py-1.5 text-xs font-bold rounded-xl text-white shadow-sm transition {{ $depot->is_open ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700' }}">
-                            {{ $depot->is_open ? 'Tutup Toko' : 'Buka Toko' }}
+                            {{ $depot->is_open ? 'Tutup Sementara' : 'Buka Sekarang' }}
                         </button>
                     </form>
                 </div>
-                <div class="text-[11px] text-slate-400">
-                    Jam Operasional Reguler: <strong>{{ $depot->open_hours ?? '08.00 - 20.00 WIB' }}</strong>
+
+                <!-- Active Schedule Display -->
+                <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 mb-5 text-xs">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Jadwal Tampil di Profil Publik:</span>
+                    <strong class="text-slate-800 text-xs sm:text-sm font-extrabold">{{ $depot->open_hours ?? '07:00 - 21:00 WIB' }}</strong>
+                </div>
+
+                <!-- Form Pengaturan Jam Operasional (SCRUM-64) -->
+                <div class="pt-4 border-t border-slate-100">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800 mb-3 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Ubah Jadwal Jam Operasional</span>
+                    </h4>
+
+                    @php
+                        preg_match('/(\d{2}[:.]\d{2})\s*-\s*(\d{2}[:.]\d{2})/', $depot->open_hours ?? '', $matches);
+                        $defaultOpen = isset($matches[1]) ? str_replace('.', ':', $matches[1]) : '07:00';
+                        $defaultClose = isset($matches[2]) ? str_replace('.', ':', $matches[2]) : '21:00';
+                    @endphp
+
+                    <form action="{{ route('depot.update_operational_hours') }}" method="POST" class="space-y-3">
+                        @csrf
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Jam Buka *</label>
+                                <input type="time" name="open_time" value="{{ $defaultOpen }}" required
+                                       class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 font-bold text-slate-800">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1">Jam Tutup *</label>
+                                <input type="time" name="close_time" value="{{ $defaultClose }}" required
+                                       class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 font-bold text-slate-800">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Hari Operasional *</label>
+                            <select name="days_option" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 font-semibold text-slate-800">
+                                <option value="Setiap Hari" {{ str_contains($depot->open_hours ?? '', 'Setiap Hari') || !str_contains($depot->open_hours ?? '', 'Senin') ? 'selected' : '' }}>Setiap Hari (Senin - Minggu)</option>
+                                <option value="Senin - Sabtu" {{ str_contains($depot->open_hours ?? '', 'Senin - Sabtu') ? 'selected' : '' }}>Senin - Sabtu (Minggu Libur)</option>
+                                <option value="Senin - Jumat" {{ str_contains($depot->open_hours ?? '', 'Senin - Jumat') ? 'selected' : '' }}>Senin - Jumat (Weekend Libur)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Catatan Tambahan (Opsional)</label>
+                            <input type="text" name="custom_note" placeholder="Contoh: Istirahat Jumat 11.30 - 13.00 WIB"
+                                   class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Status Toko Saat Ini</label>
+                            <select name="is_open" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 font-semibold text-slate-800">
+                                <option value="1" {{ $depot->is_open ? 'selected' : '' }}>Buka (Menerima Pesanan)</option>
+                                <option value="0" {{ !$depot->is_open ? 'selected' : '' }}>Tutup (Sementara Tidak Menerima Pesanan)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition shadow-sm">
+                            Simpan Perubahan Jadwal
+                        </button>
+                    </form>
                 </div>
             </div>
 
