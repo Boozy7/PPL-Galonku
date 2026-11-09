@@ -130,7 +130,7 @@
             </div>
 
             <!-- Direct Google Maps Turn-by-Turn Navigation -->
-            <a href="{{ $googleMapsUrl }}"
+            <a href="{{ $order->google_maps_url }}"
                target="_blank"
                rel="noopener noreferrer"
                class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 transition flex-shrink-0">

@@ -17,11 +17,6 @@ class AuthController extends Controller
         return view('auth.login', ['type' => 'depot']);
     }
 
-    public function showDinkesLogin()
-    {
-        return view('auth.login', ['type' => 'dinkes']);
-    }
-
     public function showUserRegister()
     {
         return view('auth.register');
@@ -97,7 +92,7 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
-            'type' => ['required', 'in:user,depot,dinkes']
+            'type' => ['required', 'in:user,depot']
         ]);
 
         // Require role to match the login portal type
@@ -105,9 +100,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
 
-            if ($user->role === 'dinkes') {
-                return redirect()->intended('/dinkes');
-            } elseif ($user->role === 'depot') {
+            if ($user->role === 'depot') {
                 return redirect()->intended('/depot');
             }
 

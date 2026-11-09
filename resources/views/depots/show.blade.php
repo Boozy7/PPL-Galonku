@@ -26,11 +26,11 @@
     <!-- Hero Header Banner -->
     <div class="relative bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden mb-6">
         <div class="h-64 sm:h-80 w-full relative">
-            <img src="{{ asset('images/images.jpg') }}"
-                 alt="{{ $depot->name }}"
+            <img src="{{ asset('images/images.jpg') }}" 
+                 alt="{{ $depot->name }}" 
                  class="w-full h-full object-cover">
             <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/40 to-transparent"></div>
-
+            
             <!-- Badges on top -->
             <div class="absolute top-4 left-4 sm:top-6 sm:left-6 flex flex-wrap gap-2">
                 @if($depot->is_certified)
@@ -53,11 +53,6 @@
                 <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight mt-1 text-white">{{ $depot->name }}</h1>
                 <p class="text-xs sm:text-sm text-slate-200 mt-1 max-w-2xl">{{ $depot->tagline }}</p>
                 <div class="flex flex-wrap items-center gap-4 mt-3 text-xs text-slate-300">
-                    <span class="flex items-center gap-1 text-amber-400 font-bold">
-                        ★ {{ number_format($depot->rating, 1) }}
-                        <span class="text-slate-300 font-normal">({{ $depot->review_count }} Ulasan Warga)</span>
-                    </span>
-                    <span>•</span>
                     <span>📍 {{ $depot->address }}</span>
                 </div>
             </div>
@@ -67,8 +62,8 @@
         <div class="p-4 sm:p-6 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-3">
                 <!-- Google Maps Direction -->
-                <a href="https://www.google.com/maps/dir/?api=1&destination={{ $depot->lat }},{{ $depot->lng }}&travelmode=driving"
-                   target="_blank"
+                <a href="https://www.google.com/maps/dir/?api=1&destination={{ $depot->lat }},{{ $depot->lng }}&travelmode=driving" 
+                   target="_blank" 
                    rel="noopener noreferrer"
                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-100 shadow-sm transition">
                     <svg class="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="currentColor">
@@ -79,7 +74,7 @@
 
                 <!-- WhatsApp Contact -->
                 @if($depot->whatsapp)
-                    <a href="https://wa.me/{{ $depot->whatsapp }}?text=Halo%20{{ urlencode($depot->name) }},%20saya%20ingin%20tanya%20jadwal%20isi%20ulang%20air%20galon."
+                    <a href="https://wa.me/{{ $depot->whatsapp }}?text=Halo%20{{ urlencode($depot->name) }},%20saya%20ingin%20tanya%20jadwal%20isi%20ulang%20air%20galon." 
                        target="_blank"
                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition">
                         <svg class="w-4 h-4 fill-current text-emerald-600" viewBox="0 0 24 24">
@@ -91,7 +86,7 @@
             </div>
 
             <!-- Order Refill Button -->
-            <a href="{{ route('orders.create', $depot->id) }}"
+            <a href="{{ route('orders.create', $depot->id) }}" 
                class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold shadow-lg shadow-brand-500/25 transition">
                 <span>Pesan Refill Pickup (Ambil Sendiri)</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,7 +209,7 @@
                         <h2 class="text-base font-bold text-slate-900">Lokasi Depot di Surabaya</h2>
                         <p class="text-xs text-slate-500">{{ $depot->address }}</p>
                     </div>
-                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ $depot->lat }},{{ $depot->lng }}&travelmode=driving"
+                    <a href="https://www.google.com/maps/dir/?api=1&destination={{ $depot->lat }},{{ $depot->lng }}&travelmode=driving" 
                        target="_blank"
                        class="text-xs font-bold text-brand-600 hover:text-brand-700">
                         Petunjuk Arah Google Maps &rarr;
@@ -256,83 +251,11 @@
                     <span>Layanan Pickup: Galon dicuci & disterilkan UV sebelum diisi. Ongkos kirim: <strong>Rp 0</strong>.</span>
                 </div>
 
-                <a href="{{ route('orders.create', $depot->id) }}"
+                <a href="{{ route('orders.create', $depot->id) }}" 
                    class="block w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-center font-bold text-sm shadow-lg shadow-brand-500/25 transition">
                     Pesan Refill Galon Sekarang
                 </a>
             </div>
-
-            <!-- Customer Reviews Card -->
-            <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-base font-bold text-slate-900">Ulasan Higienitas Warga</h2>
-                    <span class="text-xs font-bold text-amber-600">★ {{ number_format($depot->rating, 1) }} / 5.0</span>
-                </div>
-
-                <!-- Existing Reviews -->
-                <div class="space-y-3.5 mb-6 max-h-96 overflow-y-auto pr-1">
-                    @forelse($depot->reviews as $rev)
-                        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-xs">
-                            <div class="flex items-center justify-between mb-1.5">
-                                <span class="font-bold text-slate-800">{{ $rev->user_name }}</span>
-                                <span class="text-amber-500 font-bold">★ {{ number_format($rev->rating, 1) }}</span>
-                            </div>
-                            <p class="text-slate-600 leading-relaxed">{{ $rev->comment }}</p>
-                            <div class="mt-2 flex flex-wrap gap-2 text-[10px] text-slate-400 font-medium">
-                                <span>Kejernihan: {{ $rev->clarity_rating }}/5</span>
-                                <span>•</span>
-                                <span>Rasa: {{ $rev->taste_rating }}/5</span>
-                                <span>•</span>
-                                <span>Kebersihan: {{ $rev->cleanliness_rating }}/5</span>
-                            </div>
-                        </div>
-                    @empty
-                        <p class="text-xs text-slate-400 text-center py-4">Belum ada ulasan untuk depot ini. Jadilah yang pertama memberikan ulasan!</p>
-                    @endforelse
-                </div>
-
-                <!-- Write Review Form -->
-                <div class="pt-4 border-t border-slate-100">
-                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Tulis Ulasan & Penilaian Air</h3>
-                    <form action="{{ route('reviews.store', $depot->id) }}" method="POST" class="space-y-3">
-                        @csrf
-                        <div>
-                            <input type="text" name="user_name" required placeholder="Nama Anda"
-                                   class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Rating Utama (1-5)</label>
-                                <select name="rating" class="w-full px-2 py-1.5 text-xs rounded-xl border border-slate-200">
-                                    <option value="5">★★★★★ (5.0 - Sempurna)</option>
-                                    <option value="4">★★★★☆ (4.0 - Bagus)</option>
-                                    <option value="3">★★★☆☆ (3.0 - Cukup)</option>
-                                    <option value="2">★★☆☆☆ (2.0 - Kurang)</option>
-                                    <option value="1">★☆☆☆☆ (1.0 - Buruk)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 mb-1">Kejernihan Air (1-5)</label>
-                                <select name="clarity_rating" class="w-full px-2 py-1.5 text-xs rounded-xl border border-slate-200">
-                                    <option value="5">5 - Sangat Jernih & Bening</option>
-                                    <option value="4">4 - Jernih</option>
-                                    <option value="3">3 - Sedikit Berbayang</option>
-                                    <option value="2">2 - Keruh</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <textarea name="comment" rows="2" required placeholder="Ceritakan kesegaran rasa air, kejernihan, dan kebersihan depot..."
-                                      class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
-                        </div>
-                        <button type="submit" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition">
-                            Kirim Ulasan Warga
-                        </button>
-                    </form>
-                </div>
-
-            </div>
-
         </div>
 
     </div>
