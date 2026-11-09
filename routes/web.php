@@ -5,6 +5,7 @@ use App\Http\Controllers\DepotController;
 use App\Http\Controllers\DepotDashboardController;
 use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ReviewController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,6 +18,7 @@ Route::get('/', [DepotController::class, 'index'])->name('home');
 Route::get('/depots', [DepotController::class, 'index'])->name('depots.index');
 Route::get('/depots/{slug}', [DepotController::class, 'show'])->name('depots.show');
 Route::get('/api/depots', [DepotController::class, 'apiDepots'])->name('api.depots');
+Route::post('/depots/{id}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
 // Pemesanan Refill Pickup & Antrean
 Route::get('/antrean', [OrderController::class, 'index'])->name('orders.index');
