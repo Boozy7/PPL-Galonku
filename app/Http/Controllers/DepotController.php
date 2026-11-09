@@ -122,7 +122,7 @@ class DepotController extends Controller
      */
     public function show(string $slug)
     {
-        $query = Depot::with(['products'])->where('slug', $slug);
+        $query = Depot::with(['products', 'reviews'])->where('slug', $slug);
 
         if (is_numeric($slug)) {
             $query->orWhere('id', $slug);

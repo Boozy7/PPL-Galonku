@@ -35,6 +35,11 @@ class Depot extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->latest();
+    }
+
     /**
      * Get lowest refill price among products
      */
