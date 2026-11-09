@@ -292,8 +292,7 @@
             const popupContent = `
                 <div style="font-family: 'Plus Jakarta Sans', sans-serif; width: 250px; padding: 12px;">
                     <div style="position: relative; border-radius: 12px; overflow: hidden; height: 110px; margin-bottom: 10px;">
-                        <img src="${depot.cover_image}"
-                             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&w=800&q=80';"
+                        <img src="{{ asset('images/images.jpg') }}"
                              style="width: 100%; height: 100%; object-fit: cover;"
                              alt="${depot.name}" />
                         <span style="position: absolute; bottom: 6px; left: 6px; background: rgba(15,23,42,0.85); color: white; padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 700;">
