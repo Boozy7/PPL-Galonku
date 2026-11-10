@@ -44,6 +44,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth', 'role:depot'])->prefix('depot')->name('depot.')->group(function () {
     Route::get('/', [DepotDashboardController::class, 'index'])->name('dashboard');
     Route::post('/toggle-status', [DepotDashboardController::class, 'toggleStatus'])->name('toggle_status');
+    Route::post('/operational-hours', [DepotDashboardController::class, 'updateOperationalHours'])->name('update_operational_hours');
     Route::post('/order/{id}/status', [DepotDashboardController::class, 'updateOrderStatus'])->name('update_order_status');
     Route::post('/order/{id}/finish', [DepotDashboardController::class, 'finishOrder'])->name('finish_order');
     Route::post('/cert/upload', [DepotDashboardController::class, 'uploadCert'])->name('upload_cert');

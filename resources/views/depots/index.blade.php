@@ -102,7 +102,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                     @if($currentSearch)
-                        <a href="{{ route('depots.index') }}" class="absolute right-3.5 top-2.5 text-slate-400 hover:text-slate-700 text-xs font-semibold">
+                        <a href="{{ route('depots.index', array_filter(['district' => $currentDistrict, 'certified' => $currentCertified ? '1' : null, 'type' => $currentType, 'sort' => $currentSort, 'lat' => $userLat, 'lng' => $userLng])) }}" class="absolute right-3.5 top-2.5 text-slate-400 hover:text-slate-700 text-xs font-semibold">
                             Reset
                         </a>
                     @endif
@@ -111,6 +111,52 @@
                 <!-- Hidden inputs for preserving GPS lat/lng across filters -->
                 <input type="hidden" name="lat" id="formLat" value="{{ $userLat }}">
                 <input type="hidden" name="lng" id="formLng" value="{{ $userLng }}">
+
+                <!-- Filter Controls Row (SCRUM-61) -->
+                <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+
+                    <!-- Dinkes Certified Toggle Pill -->
+                    <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border transition {{ $currentCertified ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' }}">
+                        <input type="checkbox" name="certified" value="1" {{ $currentCertified ? 'checked' : '' }} onchange="document.getElementById('filterForm').submit()" class="rounded text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5">
+                        <span>✓ Lulus Uji Dinkes</span>
+                    </label>
+
+                    <!-- Water Type Select -->
+                    <select name="type" onchange="document.getElementById('filterForm').submit()"
+                            class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <option value="all" {{ empty($currentType) || $currentType === 'all' ? 'selected' : '' }}>Semua Jenis Air</option>
+                        <option value="ro" {{ $currentType === 'ro' ? 'selected' : '' }}>Reverse Osmosis (RO)</option>
+                        <option value="mineral" {{ $currentType === 'mineral' ? 'selected' : '' }}>Air Mineral Biasa</option>
+                        <option value="alkaline" {{ $currentType === 'alkaline' ? 'selected' : '' }}>Air Alkali / Hexagonal</option>
+                    </select>
+
+                    <!-- District Select -->
+                    <select name="district" onchange="document.getElementById('filterForm').submit()"
+                            class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <option value="all">Kecamatan (Semua)</option>
+                        @foreach($districts as $d)
+                            <option value="{{ $d }}" {{ $currentDistrict === $d ? 'selected' : '' }}>{{ $d }}</option>
+                        @endforeach
+                    </select>
+
+                    <!-- Sort -->
+                    <select name="sort" onchange="document.getElementById('filterForm').submit()"
+                            class="ml-auto px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <option value="name_asc" {{ $currentSort === 'name_asc' ? 'selected' : '' }}>Nama (A - Z)</option>
+                        <option value="rating_desc" {{ $currentSort === 'rating_desc' ? 'selected' : '' }}>★ Rating Tertinggi</option>
+                        <option value="distance_asc" {{ $currentSort === 'distance_asc' ? 'selected' : '' }}>📍 Jarak Terdekat</option>
+                        <option value="price_asc" {{ $currentSort === 'price_asc' ? 'selected' : '' }}>💰 Harga Termurah</option>
+                    </select>
+                </div>
+
+                @if($currentCertified || ($currentType && $currentType !== 'all') || ($currentDistrict && $currentDistrict !== 'all') || $currentSearch)
+                    <div class="flex items-center justify-between pt-1 text-[11px] text-slate-500 border-t border-slate-100">
+                        <span class="font-medium">Filter aktif diterapkan</span>
+                        <a href="{{ route('depots.index') }}" class="text-rose-600 hover:text-rose-700 font-bold inline-flex items-center gap-1">
+                            <span>✕ Reset Semua Filter</span>
+                        </a>
+                    </div>
+                @endif
             </form>
         </div>
 
