@@ -287,8 +287,163 @@
                         Pesan Refill Galon Sekarang
                     </a>
                 </div>
-                <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm mt-6">
-                    ...
+                <!-- Reviews & Hygiene Rating Box (SCRUM-60) -->
+                <div id="ulasan" class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm mt-6 space-y-5">
+                    <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Ulasan & Rating Higienitas</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Penilaian warga untuk kualitas air & kebersihan depot</p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-800">
+                                <svg class="w-4 h-4 text-amber-500 fill-current" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                                <span class="text-sm font-black font-mono">{{ number_format($depot->rating ?? 5.0, 1) }}</span>
+                            </div>
+                            <span class="block text-[10px] text-slate-400 mt-1">{{ $depot->review_count ?? $depot->reviews->count() }} penilaian</span>
+                        </div>
+                    </div>
+
+                    @if($depot->reviews->isNotEmpty())
+                        <div class="grid grid-cols-2 gap-2 text-[11px]">
+                            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                                <span class="text-slate-500">Kejernihan</span>
+                                <span class="font-bold text-slate-800 font-mono">{{ number_format($depot->reviews->avg('clarity_rating'), 1) }}/5</span>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                                <span class="text-slate-500">Rasa Air</span>
+                                <span class="font-bold text-slate-800 font-mono">{{ number_format($depot->reviews->avg('taste_rating'), 1) }}/5</span>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                                <span class="text-slate-500">Kebersihan</span>
+                                <span class="font-bold text-slate-800 font-mono">{{ number_format($depot->reviews->avg('cleanliness_rating'), 1) }}/5</span>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                                <span class="text-slate-500">Pelayanan</span>
+                                <span class="font-bold text-slate-800 font-mono">{{ number_format($depot->reviews->avg('service_rating'), 1) }}/5</span>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if($errors->any())
+                        <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+                            <ul class="list-disc pl-4 space-y-0.5">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <!-- Form Tulis Ulasan -->
+                    <form action="{{ route('reviews.store', $depot->id) }}" method="POST" class="space-y-3 bg-slate-50/80 p-4 rounded-2xl border border-slate-100">
+                        @csrf
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Tulis Ulasan Anda</h3>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nama Anda *</label>
+                            <input type="text" name="user_name" required
+                                   value="{{ old('user_name', auth()->user()->name ?? '') }}"
+                                   placeholder="Contoh: Budi Warga Surabaya"
+                                   class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Rating Keseluruhan *</label>
+                            <select name="rating" required
+                                    class="w-full px-3 py-2 text-xs font-bold text-amber-700 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                <option value="5" {{ old('rating', 5) == 5 ? 'selected' : '' }}>★★★★★ (5 - Sangat Higienis & Segar)</option>
+                                <option value="4" {{ old('rating') == 4 ? 'selected' : '' }}>★★★★☆ (4 - Baik & Bersih)</option>
+                                <option value="3" {{ old('rating') == 3 ? 'selected' : '' }}>★★★☆☆ (3 - Cukup)</option>
+                                <option value="2" {{ old('rating') == 2 ? 'selected' : '' }}>★★☆☆☆ (2 - Kurang)</option>
+                                <option value="1" {{ old('rating') == 1 ? 'selected' : '' }}>★☆☆☆☆ (1 - Buruk)</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-500 mb-1">Kejernihan Air</label>
+                                <select name="clarity_rating" class="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 bg-white">
+                                    @for($r = 5; $r >= 1; $r--)
+                                        <option value="{{ $r }}" {{ old('clarity_rating', 5) == $r ? 'selected' : '' }}>{{ $r }} / 5 ★</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-500 mb-1">Rasa & Kesegaran</label>
+                                <select name="taste_rating" class="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 bg-white">
+                                    @for($r = 5; $r >= 1; $r--)
+                                        <option value="{{ $r }}" {{ old('taste_rating', 5) == $r ? 'selected' : '' }}>{{ $r }} / 5 ★</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-500 mb-1">Kebersihan Depot</label>
+                                <select name="cleanliness_rating" class="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 bg-white">
+                                    @for($r = 5; $r >= 1; $r--)
+                                        <option value="{{ $r }}" {{ old('cleanliness_rating', 5) == $r ? 'selected' : '' }}>{{ $r }} / 5 ★</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-slate-500 mb-1">Pelayanan</label>
+                                <select name="service_rating" class="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-300 bg-white">
+                                    @for($r = 5; $r >= 1; $r--)
+                                        <option value="{{ $r }}" {{ old('service_rating', 5) == $r ? 'selected' : '' }}>{{ $r }} / 5 ★</option>
+                                    @endfor
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Komentar Ulasan *</label>
+                            <textarea name="comment" rows="2" required
+                                      placeholder="Ceritakan pengalaman isi ulang galon, kebersihan galon, & rasa airnya..."
+                                      class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">{{ old('comment') }}</textarea>
+                        </div>
+
+                        <button type="submit"
+                                class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition shadow-sm">
+                            Kirim Ulasan Higienitas
+                        </button>
+                    </form>
+
+                    <!-- Daftar Ulasan -->
+                    <div class="space-y-3 max-h-96 overflow-y-auto pr-1">
+                        @forelse($depot->reviews as $review)
+                            <div class="p-3.5 rounded-2xl border border-slate-100 bg-slate-50/60 space-y-1.5">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="text-xs font-bold text-slate-900">{{ $review->user_name }}</span>
+                                            @if($review->is_verified_purchase)
+                                                <span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[9px] font-bold">✓ Terverifikasi</span>
+                                            @endif
+                                        </div>
+                                        <span class="text-[10px] text-slate-400">{{ $review->created_at?->diffForHumans() }}</span>
+                                    </div>
+                                    <span class="text-xs font-bold text-amber-500 flex-shrink-0">
+                                        {{ str_repeat('★', (int)$review->rating) }}{{ str_repeat('☆', max(0, 5 - (int)$review->rating)) }}
+                                    </span>
+                                </div>
+
+                                <p class="text-xs text-slate-700 leading-relaxed">{{ $review->comment }}</p>
+
+                                <div class="flex flex-wrap gap-1.5 pt-1 text-[10px] text-slate-500">
+                                    <span class="px-2 py-0.5 rounded-md bg-white border border-slate-200/70">Jernih: <b>{{ $review->clarity_rating }}/5</b></span>
+                                    <span class="px-2 py-0.5 rounded-md bg-white border border-slate-200/70">Rasa: <b>{{ $review->taste_rating }}/5</b></span>
+                                    <span class="px-2 py-0.5 rounded-md bg-white border border-slate-200/70">Bersih: <b>{{ $review->cleanliness_rating }}/5</b></span>
+                                    <span class="px-2 py-0.5 rounded-md bg-white border border-slate-200/70">Layanan: <b>{{ $review->service_rating }}/5</b></span>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                <p class="text-xs font-semibold text-slate-500">Belum ada ulasan tertulis dari warga.</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Jadilah yang pertama menilai higienitas depot ini!</p>
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
             </div>
 
