@@ -167,8 +167,8 @@
             @endif
 
             <div class="flex items-center justify-between text-xs py-2 border-b border-slate-100 text-emerald-700 font-semibold">
-                <span>Biaya Pengantaran</span>
-                <span>Rp 0 (Self-Pickup di Lokasi)</span>
+                <span>Metode Pengambilan</span>
+                <span>Ambil Sendiri di Depot (Gratis)</span>
             </div>
 
             <div class="pt-2 flex items-center justify-between text-base">

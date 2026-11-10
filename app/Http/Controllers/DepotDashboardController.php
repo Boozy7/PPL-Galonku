@@ -234,7 +234,7 @@ class DepotDashboardController extends Controller
                     $order->customer_phone,
                     $order->water_product_name,
                     $order->quantity,
-                    ($order->delivery_type ?? 'pickup') === 'delivery' ? 'Antar ke Rumah' : 'Ambil Sendiri',
+                    'Ambil Sendiri',
                     $order->total_amount,
                     $order->status
                 ]);

@@ -410,8 +410,8 @@
                                     <td class="py-3 font-semibold text-slate-800">{{ $tx->customer_name }}</td>
                                     <td class="py-3 text-slate-600">{{ $tx->quantity }}x {{ $tx->water_product_name }}</td>
                                     <td class="py-3">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ ($tx->delivery_type ?? 'pickup') === 'delivery' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700' }}">
-                                            {{ ($tx->delivery_type ?? 'pickup') === 'delivery' ? 'Diantar' : 'Pickup' }}
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
+                                            Ambil Sendiri
                                         </span>
                                     </td>
                                     <td class="py-3 font-bold text-brand-700 font-mono">Rp {{ number_format($tx->total_amount, 0, ',', '.') }}</td>

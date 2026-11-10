@@ -35,7 +35,7 @@
                     <span class="text-[11px] font-bold uppercase tracking-wider text-brand-600">Layanan Depot Air</span>
                     <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">Formulir Pesan Isi Ulang Air</h1>
                     <p class="text-xs text-slate-500 mt-1">
-                        Pesan terlebih dahulu agar galon disterilkan dan diisi siap diambil atau diantar tanpa perlu antre lama.
+                        Pesan terlebih dahulu agar galon disterilkan dan diisi siap diambil langsung di depot tanpa antre lama.
                     </p>
                 </div>
 
@@ -120,48 +120,10 @@
                         </div>
                     </div>
 
-                    <!-- 3. METODE PENGANTARAN (SCRUM-63) -->
-                    <div class="mb-6">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">
-                            3. Metode Pengambilan & Pengantaran
-                        </label>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                            <label class="p-3.5 rounded-2xl border cursor-pointer transition flex items-center justify-between" id="opt_pickup">
-                                <div class="flex items-center gap-2">
-                                    <input type="radio" name="delivery_type" value="pickup" checked onchange="recalculateTotal()" class="text-brand-600 focus:ring-brand-500">
-                                    <div>
-                                        <span class="text-xs font-bold text-slate-900 block">Ambil Sendiri (Pickup)</span>
-                                        <span class="text-[11px] text-slate-500">Ambil galon langsung di depot</span>
-                                    </div>
-                                </div>
-                                <span class="text-xs font-bold text-emerald-600">Gratis (Rp 0)</span>
-                            </label>
-
-                            <label class="p-3.5 rounded-2xl border cursor-pointer transition flex items-center justify-between" id="opt_delivery">
-                                <div class="flex items-center gap-2">
-                                    <input type="radio" name="delivery_type" value="delivery" onchange="recalculateTotal()" class="text-brand-600 focus:ring-brand-500">
-                                    <div>
-                                        <span class="text-xs font-bold text-slate-900 block">Antar ke Rumah</span>
-                                        <span class="text-[11px] text-slate-500">Kurir depot mengantar ke alamat</span>
-                                    </div>
-                                </div>
-                                <span class="text-xs font-bold text-brand-700" id="deliveryFeeLabel">+Rp 5.000</span>
-                            </label>
-                        </div>
-
-                        <!-- Input Alamat Antar (Hanya Tampil Jika Pilih Delivery) -->
-                        <div id="deliveryAddressBox" class="hidden">
-                            <label class="block text-xs font-medium text-slate-600 mb-1">Alamat Lengkap Pengantaran *</label>
-                            <textarea name="delivery_address" id="deliveryAddressInput" rows="2" placeholder="Contoh: Jl. Menur No. 45, RT 02 / RW 03, Kel. Manyar Sabrangan"
-                                      class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"></textarea>
-                            <span class="text-[10px] text-emerald-700 font-semibold block mt-1">🎉 Promo: Gratis Ongkir otomatis jika memesan minimal 3 galon!</span>
-                        </div>
-                    </div>
-
-                    <!-- 4. DATA PEMESAN & JADWAL AMBIL -->
+                    <!-- 3. DATA PEMESAN & JADWAL AMBIL -->
                     <div class="mb-6 space-y-4">
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                            4. Informasi Pemesan
+                            3. Informasi Pemesan & Perkiraan Ambil di Depot
                         </label>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
@@ -177,7 +139,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-medium text-slate-600 mb-1">Perkiraan Waktu Pengambilan / Pengantaran</label>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Perkiraan Waktu Pengambilan di Depot</label>
                             <select name="pickup_time" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
                                 <option value="15-30 Menit Lagi">15 - 30 Menit Lagi (Segera)</option>
                                 <option value="1 Jam Lagi">1 Jam Lagi</option>
@@ -244,9 +206,9 @@
                         <span class="font-bold text-slate-900" id="summaryGallonCost">Rp 0</span>
                     </div>
 
-                    <div class="flex items-center justify-between text-slate-600">
-                        <span>Biaya Pengantaran (Ongkir)</span>
-                        <span class="font-bold text-slate-900" id="summaryDeliveryCost">Rp 0</span>
+                    <div class="flex items-center justify-between text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-xl font-bold">
+                        <span>Layanan Ambil Sendiri (Pickup)</span>
+                        <span>Rp 0 (Gratis)</span>
                     </div>
 
                     <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-sm">
@@ -256,7 +218,7 @@
                 </div>
 
                 <div class="mt-4 text-[11px] text-slate-400 text-center">
-                    Pembayaran dilakukan langsung di depot atau melalui kurir (Tunai / QRIS).
+                    Pembayaran dilakukan langsung di depot saat Anda mengambil galon (Tunai / QRIS).
                 </div>
             </div>
 
@@ -298,33 +260,12 @@
             gallonCost = totalQty * newGallonFee;
         }
 
-        // Kalkulasi Biaya Ongkir Otomatis (SCRUM-63)
-        const deliveryType = document.querySelector('input[name="delivery_type"]:checked').value;
-        const addressBox = document.getElementById('deliveryAddressBox');
-        let deliveryCost = 0;
-
-        if (deliveryType === 'delivery') {
-            addressBox.classList.remove('hidden');
-            // Promo diskon: gratis ongkir jika >= 3 galon
-            if (totalQty >= 3) {
-                deliveryCost = 0;
-                document.getElementById('deliveryFeeLabel').innerText = 'Gratis (Promo 3+ Galon)';
-            } else {
-                deliveryCost = 5000;
-                document.getElementById('deliveryFeeLabel').innerText = '+Rp 5.000';
-            }
-        } else {
-            addressBox.classList.add('hidden');
-            deliveryCost = 0;
-        }
-
-        const totalCost = waterCost + gallonCost + deliveryCost;
+        const totalCost = waterCost + gallonCost;
 
         // Update Rincian DOM
         document.getElementById('summaryTotalQty').innerText = totalQty;
         document.getElementById('summaryWaterCost').innerText = 'Rp ' + waterCost.toLocaleString('id-ID');
         document.getElementById('summaryGallonCost').innerText = 'Rp ' + gallonCost.toLocaleString('id-ID');
-        document.getElementById('summaryDeliveryCost').innerText = deliveryCost === 0 ? 'Rp 0' : 'Rp ' + deliveryCost.toLocaleString('id-ID');
         document.getElementById('summaryTotalCost').innerText = 'Rp ' + totalCost.toLocaleString('id-ID');
     }
 
