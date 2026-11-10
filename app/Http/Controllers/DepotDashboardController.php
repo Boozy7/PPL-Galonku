@@ -40,7 +40,27 @@ class DepotDashboardController extends Controller
         // Manajemen Katalog Produk & Layanan
         $products = WaterProduct::where('depot_id', $depot->id)->orderBy('id', 'asc')->get();
 
-        return view('depot.dashboard', compact('depot', 'activeOrders', 'completedOrdersCount', 'products'));
+        // Metrik Rekapitulasi Penjualan (SCRUM-66)
+        $todayRevenue = Order::where('depot_id', $depot->id)
+            ->whereDate('created_at', today())
+            ->where('status', '!=', 'BATAL')
+            ->sum('total_amount');
+
+        $todayGallonsSold = Order::where('depot_id', $depot->id)
+            ->whereDate('created_at', today())
+            ->where('status', '!=', 'BATAL')
+            ->sum('quantity');
+
+        // Riwayat Transaksi Selesai (Rekapitulasi)
+        $recentTransactions = Order::where('depot_id', $depot->id)
+            ->orderBy('created_at', 'desc')
+            ->take(15)
+            ->get();
+
+        return view('depot.dashboard', compact(
+            'depot', 'activeOrders', 'completedOrdersCount', 'products',
+            'todayRevenue', 'todayGallonsSold', 'recentTransactions'
+        ));
     }
 
     // Status Operasional dasar (Buka / Tutup toko sederhana)
@@ -177,5 +197,51 @@ class DepotDashboardController extends Controller
         $product->delete();
 
         return back()->with('success', 'Produk "' . $name . '" telah dihapus dari katalog.');
+    }
+
+    /**
+     * Unduh Laporan Rekapitulasi Penjualan ke CSV/Excel (SCRUM-66)
+     */
+    public function exportReport()
+    {
+        $depot = Depot::where('user_id', Auth::id())->firstOrFail();
+        $orders = Order::where('depot_id', $depot->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $fileName = 'rekapitulasi-penjualan-' . date('Y-m-d') . '.csv';
+
+        $headers = [
+            "Content-type" => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $columns = ['Tanggal Transaksi', 'No. Pesanan', 'No. Antrean', 'Nama Pemesan', 'No. WhatsApp', 'Produk Air', 'Jumlah Galon', 'Metode', 'Total Tagihan (Rp)', 'Status'];
+
+        $callback = function() use ($orders, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($orders as $order) {
+                fputcsv($file, [
+                    $order->created_at->format('Y-m-d H:i:s'),
+                    $order->order_number,
+                    $order->queue_number,
+                    $order->customer_name,
+                    $order->customer_phone,
+                    $order->water_product_name,
+                    $order->quantity,
+                    ($order->delivery_type ?? 'pickup') === 'delivery' ? 'Antar ke Rumah' : 'Ambil Sendiri',
+                    $order->total_amount,
+                    $order->status
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

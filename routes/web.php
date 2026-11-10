@@ -49,6 +49,9 @@ Route::middleware(['auth', 'role:depot'])->prefix('depot')->name('depot.')->grou
     Route::post('/order/{id}/finish', [DepotDashboardController::class, 'finishOrder'])->name('finish_order');
     Route::post('/cert/upload', [DepotDashboardController::class, 'uploadCert'])->name('upload_cert');
 
+    // Laporan Rekapitulasi Penjualan (SCRUM-66)
+    Route::get('/report/export', [DepotDashboardController::class, 'exportReport'])->name('report.export');
+
     // Katalog Produk & Layanan Depot
     Route::post('/products', [DepotDashboardController::class, 'storeProduct'])->name('products.store');
     Route::put('/products/{id}', [DepotDashboardController::class, 'updateProduct'])->name('products.update');
