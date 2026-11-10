@@ -94,27 +94,49 @@
             </div>
 
             <!-- Status Banner Message -->
-            <div class="mt-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 flex items-center justify-between">
+            @php
+                $statusBanner = match($order->status) {
+                    'SEDANG_DIISI' => [
+                        'dot' => 'bg-amber-500 animate-pulse',
+                        'title' => 'Status Saat Ini: Diproses (Sedang Disterilisasi & Diisi)',
+                        'desc' => 'Galon sedang diproses di mesin sterilisasi otomatis oleh operator depot.',
+                        'btn' => 'Simulasi Status →',
+                    ],
+                    'SIAP_DIAMBIL' => [
+                        'dot' => 'bg-emerald-500 animate-ping',
+                        'title' => 'Status Saat Ini: Siap Diambil di Depot!',
+                        'desc' => 'Galon sudah selesai diisi & disegel. Tunjukkan PIN ' . $order->pickup_pin . ' ke kasir depot.',
+                        'btn' => 'Simulasi Status →',
+                    ],
+                    'SELESAI' => [
+                        'dot' => 'bg-emerald-600',
+                        'title' => 'Status Saat Ini: Pesanan Selesai',
+                        'desc' => 'Galon telah diambil. Terima kasih telah menggunakan layanan Galonku!',
+                        'btn' => 'Reset Simulasi ↺',
+                    ],
+                    default => [
+                        'dot' => 'bg-brand-600',
+                        'title' => 'Status Saat Ini: Menunggu Antrean (Diterima)',
+                        'desc' => 'Menunggu giliran antrean pengisian (Estimasi ambil: ' . ($order->pickup_time_estimated ?? '15-30 Menit Lagi') . ').',
+                        'btn' => 'Simulasi Status →',
+                    ],
+                };
+            @endphp
+            <div class="mt-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
-                    <span class="w-3 h-3 rounded-full {{ $order->status === 'SEDANG_DIISI' ? 'bg-amber-500 animate-pulse' : 'bg-brand-600' }}"></span>
+                    <span class="w-3 h-3 rounded-full flex-shrink-0 {{ $statusBanner['dot'] }}"></span>
                     <div>
-                        <span class="text-xs font-bold block">Status Saat Ini: {{ $order->status === 'SEDANG_DIISI' ? 'Diproses (Sedang Disterilisasi & Diisi)' : 'Menunggu Antrean (Diterima)' }}</span>
-                        <p class="text-[11px] text-slate-500">
-                            @if($order->status === 'SEDANG_DIISI')
-                                Galon sedang diproses di mesin sterilisasi otomatis oleh operator depot.
-                            @else
-                                Menunggu giliran antrean pengisian (Estimasi ambil: {{ $order->pickup_time_estimated ?? '15-30 Menit Lagi' }}).
-                            @endif
-                        </p>
+                        <span class="text-xs font-bold block">{{ $statusBanner['title'] }}</span>
+                        <p class="text-[11px] text-slate-500">{{ $statusBanner['desc'] }}</p>
                     </div>
                 </div>
 
-                <!-- Simulation button: Toggles between DITERIMA and SEDANG_DIISI -->
+                <!-- Simulation button: Advances 1 -> 2 -> 3 -> 4 (and resets after 4) -->
                 <form action="{{ route('orders.advance', $order->order_number) }}" method="POST">
                     @csrf
-                    <button type="submit" title="Klik untuk simulasi status (Menunggu / Diproses)"
+                    <button type="submit" title="Klik untuk simulasi tahap status berikutnya"
                             class="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-[10px] font-bold transition flex items-center gap-1 flex-shrink-0">
-                        <span>Simulasi Status &rarr;</span>
+                        <span>{{ $statusBanner['btn'] }}</span>
                     </button>
                 </form>
             </div>

@@ -336,8 +336,8 @@
                                             {{ $order->queue_number }}
                                         </span>
                                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border
-                                            {{ $order->status == 'DITERIMA' ? 'bg-sky-50 text-sky-800 border-sky-300' : 'bg-amber-50 text-amber-800 border-amber-300' }}">
-                                            {{ $order->status === 'DITERIMA' ? '1. Menunggu Giliran' : '2. Sedang Diproses' }}
+                                            {{ $order->status === 'DITERIMA' ? 'bg-sky-50 text-sky-800 border-sky-300' : ($order->status === 'SEDANG_DIISI' ? 'bg-amber-50 text-amber-800 border-amber-300' : 'bg-emerald-50 text-emerald-800 border-emerald-300') }}">
+                                            {{ $order->status === 'DITERIMA' ? '1. Menunggu Giliran' : ($order->status === 'SEDANG_DIISI' ? '2. Sedang Diproses' : '3. Siap Diambil') }}
                                         </span>
                                         <span class="text-[11px] font-mono text-slate-400">{{ $order->order_number }}</span>
                                     </div>
@@ -346,12 +346,13 @@
                                     </div>
                                     <div class="text-xs text-slate-600">
                                         {{ $order->quantity }}x {{ $order->water_product_name }} • Total: <strong class="text-slate-900 font-bold">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</strong>
+                                        • PIN: <span class="font-mono font-bold text-amber-700">{{ $order->pickup_pin }}</span>
                                     </div>
                                 </div>
 
                                 <!-- Action Button -->
                                 <div class="flex items-center gap-2 flex-shrink-0">
-                                    @if($order->status == 'DITERIMA')
+                                    @if($order->status === 'DITERIMA')
                                         <form action="{{ route('depot.update_order_status', $order->id) }}" method="POST">
                                             @csrf
                                             <input type="hidden" name="status" value="SEDANG_DIISI">
@@ -360,11 +361,23 @@
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                                             </button>
                                         </form>
-                                    @else
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-100 text-amber-900 text-xs font-bold">
-                                            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                                            <span>Sedang Diproses</span>
-                                        </span>
+                                    @elseif($order->status === 'SEDANG_DIISI')
+                                        <form action="{{ route('depot.update_order_status', $order->id) }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="status" value="SIAP_DIAMBIL">
+                                            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5">
+                                                <span>Tandai Siap Diambil</span>
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            </button>
+                                        </form>
+                                    @elseif($order->status === 'SIAP_DIAMBIL')
+                                        <form action="{{ route('depot.finish_order', $order->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5">
+                                                <span>Konfirmasi Diambil (Selesai)</span>
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            </button>
+                                        </form>
                                     @endif
                                 </div>
                             </div>

@@ -15,8 +15,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Jalankan DepotBatchSeeder dulu sebelum membuat akun demo mitra@galonku.com,
+        // karena DepotBatchSeeder membersihkan user role 'depot' terlebih dahulu.
+        $this->call([
+            DepotBatchSeeder::class,
+        ]);
 
-        // Depot Owner (Mitra)
+        // Depot Owner (Mitra Demo)
         $depotUser = User::updateOrCreate(
             ['email' => 'mitra@galonku.com'],
             [
@@ -35,9 +40,5 @@ class DatabaseSeeder extends Seeder
                 'role' => 'user',
             ]
         );
-
-        $this->call([
-            DepotBatchSeeder::class,
-        ]);
     }
 }

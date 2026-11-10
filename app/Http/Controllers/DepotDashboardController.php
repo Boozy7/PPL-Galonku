@@ -113,21 +113,35 @@ class DepotDashboardController extends Controller
     // Pembaruan status antrean
     public function updateOrderStatus(Request $request, $id)
     {
-        $order = Order::findOrFail($id);
+        $depot = Depot::where('user_id', Auth::id())->firstOrFail();
+        $order = Order::where('depot_id', $depot->id)->findOrFail($id);
 
         $request->validate([
-            'status' => 'required|in:SEDANG_DIISI'
+            'status' => 'required|in:SEDANG_DIISI,SIAP_DIAMBIL,SELESAI'
         ]);
 
         $order->status = $request->status;
         $order->save();
 
-        return back()->with('success', 'Status pesanan ' . $order->queue_number . ' diperbarui menjadi Sedang Diproses.');
+        $label = match ($order->status) {
+            'SEDANG_DIISI' => 'Sedang Diproses (Cuci & Isi)',
+            'SIAP_DIAMBIL' => 'Siap Diambil di Depot',
+            'SELESAI' => 'Pesanan Selesai',
+            default => $order->status,
+        };
+
+        return back()->with('success', "Status pesanan {$order->queue_number} diperbarui menjadi: {$label}.");
     }
 
     public function finishOrder(Request $request, $id)
     {
-        return back()->with('info', 'Status pesanan saat ini dalam antrean proses.');
+        $depot = Depot::where('user_id', Auth::id())->firstOrFail();
+        $order = Order::where('depot_id', $depot->id)->findOrFail($id);
+
+        $order->status = 'SELESAI';
+        $order->save();
+
+        return back()->with('success', "Pesanan {$order->queue_number} telah selesai dan galon sudah diambil.");
     }
 
     public function uploadCert(Request $request)

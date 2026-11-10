@@ -129,18 +129,25 @@ class OrderController extends Controller
     {
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
 
-        // Alur antrean status
+        // Alur antrean status berurutan 1 -> 2 -> 3 -> 4 (lalu reset ke 1 untuk demo)
         if ($order->status === 'DITERIMA') {
             $order->status = 'SEDANG_DIISI';
-            $order->save();
-            return redirect()->route('orders.track', $order->order_number)
-                ->with('status_updated', "Status antrean diperbarui: Diproses (Sedang Disterilisasi & Diisi).");
+            $message = 'Status antrean diperbarui: 2. Sedang Diproses (Sterilisasi UV & Isi Air).';
+        } elseif ($order->status === 'SEDANG_DIISI') {
+            $order->status = 'SIAP_DIAMBIL';
+            $message = 'Status antrean diperbarui: 3. Siap Diambil! Silakan tunjukkan PIN ke kasir depot.';
+        } elseif ($order->status === 'SIAP_DIAMBIL') {
+            $order->status = 'SELESAI';
+            $message = 'Status antrean diperbarui: 4. Pesanan Selesai diambil.';
         } else {
             $order->status = 'DITERIMA';
-            $order->save();
-            return redirect()->route('orders.track', $order->order_number)
-                ->with('status_updated', "Status antrean direset ke: Menunggu Antrean (Diterima).");
+            $message = 'Simulasi direset ke: 1. Menunggu Antrean (Diterima).';
         }
+
+        $order->save();
+
+        return redirect()->route('orders.track', $order->order_number)
+            ->with('status_updated', $message);
     }
 
     /**
