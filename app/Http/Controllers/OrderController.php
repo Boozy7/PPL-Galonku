@@ -140,7 +140,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Pelacakan status antrean pesanan (Customer)
+     * Pelacakan status antrean pesanan (Customer) - Tiket Antrean
      */
     public function track(string $orderNumber)
     {
@@ -149,14 +149,43 @@ class OrderController extends Controller
     }
 
     /**
-     * Halaman daftar antrean masuk
+     * Endpoint API Live Polling Status Pesanan (SCRUM-62)
+     * Mengembalikan status antrean real-time dalam JSON
      */
-    public function index()
+    public function checkStatus(string $orderNumber)
     {
-        $orders = Order::with('depot')
-            ->orderBy('created_at', 'desc')
-            ->take(20)
-            ->get();
+        $order = Order::where('order_number', $orderNumber)->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Pesanan tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'status' => $order->status,
+            'status_label' => $order->status_label,
+            'updated_at' => $order->updated_at->diffForHumans(),
+        ]);
+    }
+
+    /**
+     * Halaman daftar antrean & form pencarian tiket (Customer)
+     */
+    public function index(Request $request)
+    {
+        $query = Order::with('depot')->orderBy('created_at', 'desc');
+
+        // Pencarian berdasarkan nomor antrean atau nomor pesanan
+        if ($search = $request->input('search')) {
+            $cleanSearch = strtoupper(trim($search));
+            $query->where(function ($q) use ($cleanSearch) {
+                $q->where('order_number', 'like', "%{$cleanSearch}%")
+                  ->orWhere('queue_number', 'like', "%{$cleanSearch}%")
+                  ->orWhere('customer_phone', 'like', "%{$cleanSearch}%");
+            });
+        }
+
+        $orders = $query->take(20)->get();
 
         return view('orders.index', compact('orders'));
     }

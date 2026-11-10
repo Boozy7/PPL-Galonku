@@ -23,5 +23,10 @@ Route::post('order', [OrderController::class, 'store'])->name('orders.store');
 Route::get('depot', [DepotDashboardController::class, 'index'])->name('depot.dashboard');
 Route::post('depot/toggle-status', [DepotDashboardController::class, 'toggleStatus'])->name('depot.toggle_status');
 Route::post('depot/order/{id}/status', [DepotDashboardController::class, 'updateOrderStatus'])->name('depot.update_order_status');
-Route::get('order/track/{orderNumber}', [OrderController::class, 'track'])->name('orders.track');
-Route::get('antrean', [OrderController::class, 'index'])->name('orders.index');
+
+// Pemesanan Refill Pickup & Pelacakan Antrean (SCRUM-62)
+Route::get('/antrean', [OrderController::class, 'index'])->name('orders.index');
+Route::get('/orders', [OrderController::class, 'index']);
+Route::get('/order/track/{orderNumber}', [OrderController::class, 'track'])->name('orders.track');
+Route::get('/api/orders/{orderNumber}/status', [OrderController::class, 'checkStatus'])->name('api.orders.status');
+Route::post('/order/track/{orderNumber}/advance', [OrderController::class, 'advanceStatus'])->name('orders.advance');

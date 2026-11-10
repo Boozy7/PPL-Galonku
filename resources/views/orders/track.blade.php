@@ -17,14 +17,6 @@
         </a>
     </div>
 
-    <!-- Status notification if simulation triggered -->
-    @if(session('status_updated'))
-        <div class="mb-6 bg-cyan-50 border border-cyan-200 text-cyan-900 p-4 rounded-2xl flex items-center gap-3">
-            <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse"></span>
-            <p class="text-xs sm:text-sm font-bold">{{ session('status_updated') }}</p>
-        </div>
-    @endif
-
     <!-- MAIN QUEUE CARD -->
     <div class="bg-white rounded-3xl border border-slate-200/80 shadow-lg overflow-hidden mb-6">
 
@@ -59,9 +51,7 @@
             @endphp
 
             <div class="relative">
-                <!-- Line background -->
                 <div class="hidden sm:block absolute top-1/2 left-0 right-0 h-1 bg-slate-100 -translate-y-1/2 z-0"></div>
-                <!-- Active Line -->
                 <div class="hidden sm:block absolute top-1/2 left-0 h-1 bg-brand-600 -translate-y-1/2 z-0 transition-all duration-500"
                      style="width: {{ (($currentStepNum - 1) / 3) * 100 }}%;"></div>
 
@@ -93,34 +83,20 @@
                 </div>
             </div>
 
-            <!-- Status Banner Message -->
-            <div class="mt-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 flex items-center justify-between">
+            <!-- Current Status Box & Polling Indicator -->
+            <div class="mt-6 p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
-                    <span class="w-3 h-3 rounded-full {{ $order->status === 'SEDANG_DIISI' ? 'bg-amber-500 animate-pulse' : 'bg-brand-600' }}"></span>
+                    <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
                     <div>
-                        <span class="text-xs font-bold block">Status Saat Ini: {{ $order->status === 'SEDANG_DIISI' ? 'Diproses (Sedang Disterilisasi & Diisi)' : 'Menunggu Antrean (Diterima)' }}</span>
-                        <p class="text-[11px] text-slate-500">
-                            @if($order->status === 'SEDANG_DIISI')
-                                Galon sedang diproses di mesin sterilisasi otomatis oleh operator depot.
-                            @else
-                                Menunggu giliran antrean pengisian (Estimasi ambil: {{ $order->pickup_time_estimated ?? '15-30 Menit Lagi' }}).
-                            @endif
-                        </p>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Status Saat Ini:</span>
+                        <span class="text-sm font-extrabold text-slate-900">{{ $order->status_label }}</span>
                     </div>
                 </div>
-
-                <!-- Simulation button: Toggles between DITERIMA and SEDANG_DIISI -->
-                <form action="{{ route('orders.advance', $order->order_number) }}" method="POST">
-                    @csrf
-                    <button type="submit" title="Klik untuk simulasi status (Menunggu / Diproses)"
-                            class="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-[10px] font-bold transition flex items-center gap-1 flex-shrink-0">
-                        <span>Simulasi Status &rarr;</span>
-                    </button>
-                </form>
+                <span class="text-[10px] text-slate-400 font-medium">Auto-update aktif</span>
             </div>
         </div>
 
-        <!-- DESTINATION & GOOGLE MAPS NAVIGATION BUTTON -->
+        <!-- DESTINATION & GOOGLE MAPS NAVIGATION -->
         <div class="p-6 sm:p-8 bg-slate-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Lokasi Pengambilan Depot</span>
@@ -129,11 +105,10 @@
                 <p class="text-xs text-emerald-600 font-semibold mt-1">Buka: {{ $order->depot->open_hours }}</p>
             </div>
 
-            <!-- Direct Google Maps Turn-by-Turn Navigation -->
-            <a href="{{ $googleMapsUrl }}"
+            <a href="{{ $order->google_maps_url }}"
                target="_blank"
                rel="noopener noreferrer"
-               class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 transition flex-shrink-0">
+               class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md transition flex-shrink-0">
                 <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                 </svg>
@@ -186,14 +161,31 @@
                 <span class="text-slate-400 block font-medium">Nomor WhatsApp:</span>
                 <span class="font-bold text-slate-800 font-mono">{{ $order->customer_phone }}</span>
             </div>
-            @if($order->notes)
-                <div class="sm:col-span-2 pt-2 border-t border-slate-200">
-                    <span class="text-slate-400 block font-medium">Catatan:</span>
-                    <span class="text-slate-700">{{ $order->notes }}</span>
-                </div>
-            @endif
         </div>
     </div>
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    // SCRUM-62: Polling Realtime Status Pesanan setiap 5 detik
+    const orderNumber = "{{ $order->order_number }}";
+    const currentStatus = "{{ $order->status }}";
+
+    function pollOrderStatus() {
+        if (currentStatus === 'SELESAI' || currentStatus === 'BATAL') return;
+
+        fetch(`/api/orders/${orderNumber}/status`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.status !== currentStatus) {
+                    window.location.reload();
+                }
+            })
+            .catch(err => console.log('Polling status error:', err));
+    }
+
+    setInterval(pollOrderStatus, 5000);
+</script>
+@endpush
