@@ -15,6 +15,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+<<<<<<< HEAD
+=======
+        // 1. Akun Admin Dinkes Surabaya
+        User::updateOrCreate(
+            ['email' => 'admin@dinkes.surabaya.go.id'],
+            [
+                'name' => 'Admin Dinkes Surabaya',
+                'password' => bcrypt('password'),
+                'role' => 'dinkes',
+            ]
+        );
+>>>>>>> 97a7321 (feat(dinkes): verifikasi dokumen uji lab dan aktivasi badge resmi SLHS (SCRUM-67))
 
         // Depot Owner (Mitra)
         $depotUser = User::updateOrCreate(
