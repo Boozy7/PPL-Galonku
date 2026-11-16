@@ -35,6 +35,9 @@ Route::middleware(['auth', 'role:depot'])->prefix('depot')->name('depot.')->grou
     Route::put('/products/{id}', [DepotDashboardController::class, 'updateProduct'])->name('products.update');
     Route::delete('/products/{id}', [DepotDashboardController::class, 'deleteProduct'])->name('products.destroy');
 
+    // SCRUM-65: Upload Sertifikat & Hasil Lab (Baru Ditambahkan)
+    Route::post('/cert/upload', [DepotDashboardController::class, 'uploadCert'])->name('upload_cert');
+
     // SCRUM-66: Fitur Export Laporan yang Baru Ditambahkan
     Route::get('/report/export', [DepotDashboardController::class, 'exportReport'])->name('report.export');
 });

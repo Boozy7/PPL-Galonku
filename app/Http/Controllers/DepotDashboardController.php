@@ -95,20 +95,40 @@ class DepotDashboardController extends Controller
         return back()->with('info', 'Status pesanan saat ini dalam antrean proses.');
     }
 
+    /**
+     * Unggah Dokumen Hasil Lab Berkala & Sertifikat SLHS ke Dinkes (SCRUM-65)
+     */
     public function uploadCert(Request $request)
     {
         $depot = Depot::where('user_id', Auth::id())->firstOrFail();
 
-        $request->validate([
-            'certificate' => 'required|image|max:5120'
+        $validated = $request->validate([
+            'certificate' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // Maks 5MB (PDF / Gambar)
+            'lab_name' => 'nullable|string|max:150',
+            'test_date' => 'nullable|date',
+            'notes' => 'nullable|string|max:500',
         ]);
 
+        // Simpan file ke storage public (storage/app/public/certificates)
         $path = $request->file('certificate')->store('certificates', 'public');
 
-        $depot->certification_status = 'PROSES_RENEWAL';
+        // Update data sertifikasi & dokumen lab pada depot
+        $depot->certificate_document_path = '/storage/' . $path;
+        $depot->certification_status = 'PROSES_RENEWAL'; // Mengubah status agar masuk ke antrean Dinkes
+
+        if (!empty($validated['lab_name'])) {
+            $depot->lab_name = $validated['lab_name'];
+        }
+        if (!empty($validated['test_date'])) {
+            $depot->last_tested_date = date('d F Y', strtotime($validated['test_date']));
+        }
+        if (!empty($validated['notes'])) {
+            $depot->certificate_notes = $validated['notes'];
+        }
+
         $depot->save();
 
-        return back()->with('success', 'Sertifikat baru berhasil diunggah.');
+        return back()->with('success', 'Dokumen hasil uji lab & permohonan sertifikasi berhasil diunggah! Status depot kini "Dalam Proses Verifikasi Dinkes".');
     }
 
     // ==========================================
@@ -163,50 +183,50 @@ class DepotDashboardController extends Controller
 
         return back()->with('success', 'Produk "' . $name . '" telah dihapus dari katalog.');
     }
-    
-/**
-   * Unduh Laporan Rekapitulasi Penjualan ke CSV/Excel (SCRUM-66)
-   */
-  public function exportReport()
-  {
-      $depot = Depot::where('user_id', Auth::id())->firstOrFail();
-      $orders = Order::where('depot_id', $depot->id)
-          ->orderBy('created_at', 'desc')
-          ->get();
 
-      $fileName = 'rekapitulasi-penjualan-' . date('Y-m-d') . '.csv';
+    /**
+     * Unduh Laporan Rekapitulasi Penjualan ke CSV/Excel (SCRUM-66)
+     */
+    public function exportReport()
+    {
+        $depot = Depot::where('user_id', Auth::id())->firstOrFail();
+        $orders = Order::where('depot_id', $depot->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-      $headers = [
-          "Content-type" => "text/csv; charset=UTF-8",
-          "Content-Disposition" => "attachment; filename=$fileName",
-          "Pragma" => "no-cache",
-          "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-          "Expires" => "0"
-      ];
+        $fileName = 'rekapitulasi-penjualan-' . date('Y-m-d') . '.csv';
 
-      $columns = ['Tanggal Transaksi', 'No. Pesanan', 'No. Antrean', 'Nama Pemesan', 'No. WhatsApp', 'Produk Air', 'Jumlah Galon', 'Metode', 'Total Tagihan (Rp)', 'Status'];
+        $headers = [
+            "Content-type" => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
 
-      $callback = function() use ($orders, $columns) {
-          $file = fopen('php://output', 'w');
-          fputcsv($file, $columns);
+        $columns = ['Tanggal Transaksi', 'No. Pesanan', 'No. Antrean', 'Nama Pemesan', 'No. WhatsApp', 'Produk Air', 'Jumlah Galon', 'Metode', 'Total Tagihan (Rp)', 'Status'];
 
-          foreach ($orders as $order) {
-              fputcsv($file, [
-                  $order->created_at->format('Y-m-d H:i:s'),
-                  $order->order_number,
-                  $order->queue_number,
-                  $order->customer_name,
-                  $order->customer_phone,
-                  $order->water_product_name,
-                  $order->quantity,
-                  $order->delivery_type === 'delivery' ? 'Antar ke Rumah' : 'Ambil Sendiri',
-                  $order->total_amount,
-                  $order->status
-              ]);
-          }
-          fclose($file);
-      };
+        $callback = function() use ($orders, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
 
-      return response()->stream($callback, 200, $headers);
-  }
+            foreach ($orders as $order) {
+                fputcsv($file, [
+                    $order->created_at->format('Y-m-d H:i:s'),
+                    $order->order_number,
+                    $order->queue_number,
+                    $order->customer_name,
+                    $order->customer_phone,
+                    $order->water_product_name,
+                    $order->quantity,
+                    $order->delivery_type === 'delivery' ? 'Antar ke Rumah' : 'Ambil Sendiri',
+                    $order->total_amount,
+                    $order->status
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
