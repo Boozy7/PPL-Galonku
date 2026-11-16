@@ -123,6 +123,145 @@
             @endif
         </div>
 
+                <!-- ============================================================== -->
+        <!-- 3. KELOLA & RESPON LAPORAN AIR BERMASALAH (SCRUM-68 / SCRUM-84) -->
+        <!-- ============================================================== -->
+        <div class="bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-200/80">
+            <div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
+                <div>
+                    <h2 class="text-base font-extrabold text-slate-900">Laporan Aduan Kualitas Air dari Warga</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Daftar pengaduan warga terkait air keruh, bau, lumut, dan tindakan respon dinas</p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200">
+                    {{ $complaints->where('status', '!=', 'SELESAI')->count() }} Aduan Aktif
+                </span>
+            </div>
+
+            @if($complaints->isEmpty())
+                <div class="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                    <svg class="w-10 h-10 text-slate-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <p class="text-sm font-bold text-slate-700">Tidak ada pengaduan warga</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Belum ada laporan kualitas air yang masuk ke sistem.</p>
+                </div>
+            @else
+                <div class="space-y-6">
+                    @foreach($complaints as $c)
+                        <div class="p-5 sm:p-6 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-white transition relative">
+                            
+                            <!-- Header Status Aduan -->
+                            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2.5 py-1 rounded-lg font-mono text-xs font-black bg-rose-100 text-rose-800 border border-rose-200">
+                                        {{ $c->ticket_number }}
+                                    </span>
+                                    <span class="text-xs font-bold text-slate-700">{{ $c->created_at->format('d M Y, H:i') }} WIB</span>
+                                </div>
+
+                                <span class="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase
+                                    {{ $c->status === 'SELESAI' ? 'bg-emerald-100 text-emerald-800' : 
+                                      ($c->status === 'TERKIRIM_KE_DINKES' ? 'bg-rose-100 text-rose-800 animate-pulse' : 'bg-amber-100 text-amber-800') }}">
+                                    {{ str_replace('_', ' ', $c->status) }}
+                                </span>
+                            </div>
+
+                            <!-- Detail Permasalahan -->
+                            <div class="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div class="lg:col-span-2 space-y-2">
+                                    <h4 class="text-sm font-extrabold text-slate-900">{{ $c->issue_title }}</h4>
+                                    <p class="text-xs text-slate-700 bg-white p-3 rounded-xl border border-slate-200 leading-relaxed">
+                                        "{{ $c->description }}"
+                                    </p>
+
+                                    <div class="flex flex-wrap gap-4 text-[11px] text-slate-500 pt-1">
+                                        <span>👤 Pelapor: <strong class="text-slate-800">{{ $c->reporter_name }}</strong> ({{ $c->reporter_phone }})</span>
+                                        <span>🏢 Terlapor: <strong class="text-slate-800">{{ $c->depot->name ?? 'Unknown Depot' }}</strong> (Kec. {{ $c->depot->district ?? '-' }})</span>
+                                        <span>🏷️ Kategori: <strong class="uppercase text-rose-700">{{ $c->issue_type }}</strong></span>
+                                    </div>
+
+                                    @if($c->depot && !$c->depot->is_certified)
+                                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold">
+                                            <span>⚠️ Badge SLHS Depot Ini Telah Dicabut</span>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <!-- Foto Bukti Aduan dari Pelanggan -->
+                                <div>
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1.5">Foto Bukti dari Warga:</span>
+                                    @if($c->photo_path)
+                                        <a href="{{ asset($c->photo_path) }}" target="_blank">
+                                            <img src="{{ asset($c->photo_path) }}" alt="Bukti Aduan" class="w-full h-32 rounded-xl object-cover border border-slate-200 shadow-sm hover:opacity-90 transition">
+                                        </a>
+                                    @else
+                                        <div class="h-32 rounded-xl bg-slate-100 border border-dashed border-slate-300 flex items-center justify-center text-xs text-slate-400">
+                                            Tidak ada lampiran foto
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- FORM RESPON TINDAK LANJUT DINKES (SCRUM-85) -->
+                            <div class="mt-5 pt-4 border-t border-slate-200">
+                                @if($c->status !== 'SELESAI')
+                                    <form action="{{ route('dinkes.update_complaint', $c->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                                        @csrf
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 mb-1">Status Penanganan Aduan</label>
+                                                <select name="status" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500">
+                                                    <option value="SEDANG_INVESTIGASI" {{ $c->status === 'SEDANG_INVESTIGASI' ? 'selected' : '' }}>1. Sedang Diinvestigasi (Pemeriksaan Awal)</option>
+                                                    <option value="INSPEKSI_LAPANGAN" {{ $c->status === 'INSPEKSI_LAPANGAN' ? 'selected' : '' }}>2. Inspeksi Lapangan (Pengambilan Sampel Air)</option>
+                                                    <option value="SELESAI">3. Selesai (Kasus Ditutup & Solusi Diterapkan)</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-[11px] font-bold text-slate-700 mb-1">Unggah Bukti Hasil Inspeksi Lapangan (Opsional)</label>
+                                                <input type="file" name="proof_image" accept="image/*" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-slate-200 file:text-xs file:font-bold">
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Catatan Tindak Lanjut Petugas Dinkes *</label>
+                                            <textarea name="dinkes_notes" rows="2" required placeholder="Tuliskan temuan investigasi, tindakan pembinaan, atau hasil uji lab ulang terhadap depot..."
+                                                      class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500">{{ old('dinkes_notes', $c->dinkes_notes) }}</textarea>
+                                        </div>
+
+                                        <!-- OPSI KRITIS: HAPUS / CABUT BADGE TERKAIT DEPOT AIR BERMASALAH -->
+                                        @if($c->depot && $c->depot->is_certified)
+                                            <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-3">
+                                                <input type="checkbox" name="revoke_badge" value="1" id="revoke_{{ $c->id }}"
+                                                       class="w-4 h-4 mt-0.5 rounded text-rose-600 focus:ring-rose-500 border-rose-300">
+                                                <label for="revoke_{{ $c->id }}" class="text-xs text-rose-900 cursor-pointer">
+                                                    <strong class="block font-bold">Hapus / Cabut Badge Resmi SLHS Depot Ini</strong>
+                                                    Centang jika hasil investigasi membuktikan air depot tidak memenuhi baku mutu kesehatan, sehingga sertifikat dan badge resminya langsung dinonaktifkan dari publik.
+                                                </label>
+                                            </div>
+                                        @endif
+
+                                        <button type="submit" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                                            Simpan Respon & Perbarui Status Aduan
+                                        </button>
+                                    </form>
+                                @else
+                                    <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900">
+                                        <p class="font-bold">✓ Kasus Telah Ditutup & Diselesaikan oleh Dinkes</p>
+                                        <p class="mt-1"><strong>Catatan Hasil Akhir:</strong> {{ $c->dinkes_notes }}</p>
+                                        @if($c->proof_image_path)
+                                            <a href="{{ asset($c->proof_image_path) }}" target="_blank" class="inline-block mt-2 font-bold underline text-emerald-800">
+                                                Lihat Bukti Berita Acara / Foto Penyelesaian &nearr;
+                                            </a>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>       
+
         <!-- 2. DAFTAR DEPOT YANG SUDAH TERVERIFIKASI RESMI (SAMPLE MONITORING) -->
         <div class="bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-200/80">
             <h2 class="text-base font-extrabold text-slate-900 mb-1">Depot Terakreditasi SLHS Aktif (Surabaya)</h2>

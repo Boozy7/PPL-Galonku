@@ -71,6 +71,10 @@ Route::middleware(['auth', 'role:dinkes'])->prefix('dinkes')->name('dinkes.')->g
     Route::get('/', [DinkesDashboardController::class, 'index'])->name('dashboard');
     Route::post('/depot/{id}/approve', [DinkesDashboardController::class, 'approveDepot'])->name('approve_depot');
     Route::post('/depot/{id}/reject', [DinkesDashboardController::class, 'rejectDepot'])->name('reject_depot');
+    
+// SCRUM-68: Respon Laporan Aduan & Pencabutan Badge Depot Bermasalah
+    Route::post('/complaint/{id}/update', [DinkesDashboardController::class, 'updateComplaint'])->name('update_complaint');
+    Route::post('/depot/{id}/revoke-badge', [DinkesDashboardController::class, 'revokeBadge'])->name('revoke_badge');
 });
 
 // Kanal Pengaduan Kualitas Air ke Dinkes (SCRUM-70)
