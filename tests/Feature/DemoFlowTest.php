@@ -6,17 +6,18 @@ use App\Models\Complaint;
 use App\Models\Depot;
 use App\Models\Order;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class DemoFlowTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     public function test_full_end_to_end_demo_flow_works_without_errors(): void
     {
+        $this->seed();
         Storage::fake('public');
 
         // 0. Pastikan seluruh halaman GET publik/login bisa dibuka (tidak 500)
