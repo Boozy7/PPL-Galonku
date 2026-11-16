@@ -83,12 +83,9 @@
                         <label class="block text-xs font-bold text-slate-700 mb-2 ml-1">Kecamatan (Di Surabaya)</label>
                         <select name="district" required class="w-full bg-white border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 focus:outline-none focus:border-slate-300 focus:ring-4 focus:ring-brand-50 transition-all">
                             <option value="">Pilih Kecamatan...</option>
-                            <option value="Gubeng">Gubeng</option>
-                            <option value="Tegalsari">Tegalsari</option>
-                            <option value="Simokerto">Simokerto</option>
-                            <option value="Genteng">Genteng</option>
-                            <option value="Sukolilo">Sukolilo</option>
-                            <option value="Rungkut">Rungkut</option>
+                            @foreach(['Gayungan', 'Wonokromo', 'Wonocolo', 'Karangpilang', 'Sukolilo', 'Rungkut', 'Mulyorejo', 'Tegalsari', 'Genteng', 'Bubutan', 'Tandes', 'Sambikerep', 'Dukuh Pakis', 'Sukomanunggal', 'Semampir', 'Kenjeran', 'Pabean Cantian', 'Jambangan', 'Sawahan', 'Gunung Anyar', 'Tenggilis Mejoyo', 'Lakarsantri', 'Benowo', 'Krembangan', 'Simokerto', 'Tambaksari', 'Gubeng'] as $dist)
+                                <option value="{{ $dist }}" {{ old('district') === $dist ? 'selected' : '' }}>{{ $dist }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div>
@@ -96,14 +93,36 @@
                         <textarea name="address" rows="2" required placeholder="Jl. Contoh No 123, RT 1 RW 2..."
                             class="w-full bg-white border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-800 focus:outline-none focus:border-slate-300 focus:ring-4 focus:ring-brand-50 transition-all">{{ old('address') }}</textarea>
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1 ml-1">Pin Lokasi Depot di Peta Surabaya *</label>
+                        <p class="text-[11px] text-slate-500 mb-2 ml-1">Klik atau geser pin biru pada peta untuk menandai titik lokasi persis depot Anda.</p>
+                        <div id="registerMap" class="w-full h-56 rounded-2xl border border-slate-200 overflow-hidden z-0"></div>
+                        <div class="grid grid-cols-2 gap-3 mt-2">
+                            <div>
+                                <span class="text-[10px] font-bold text-slate-400 block">Latitude</span>
+                                <input type="text" name="lat" id="regLat" value="{{ old('lat', '-7.2891660') }}" readonly required
+                                       class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-700">
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-bold text-slate-400 block">Longitude</span>
+                                <input type="text" name="lng" id="regLng" value="{{ old('lng', '112.7343980') }}" readonly required
+                                       class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-700">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4">
-                    <h3 class="text-sm font-black text-slate-800 mb-2 border-b border-slate-200 pb-2">3. Dokumen Verifikasi (SLHS)</h3>
-                    <p class="text-xs text-slate-500 mb-3 leading-relaxed">Depot Anda harus mendapatkan verifikasi Dinas Kesehatan untuk dapat tampil di publik. Silakan unggah Sertifikat Laik Higiene Sanitasi (SLHS) terbaru Anda.</p>
+                    <h3 class="text-sm font-black text-slate-800 mb-2 border-b border-slate-200 pb-2">3. Foto Toko & Dokumen Verifikasi (SLHS)</h3>
+                    <p class="text-xs text-slate-500 mb-3 leading-relaxed">Depot Anda harus mendapatkan ACC & verifikasi Dinas Kesehatan sebelum tampil di daftar pencarian pelanggan. Silakan unggah foto tampak depan toko dan Sertifikat SLHS / hasil uji lab terbaru.</p>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-2 ml-1">Unggah Sertifikat / Bukti Lab (.jpg, .png)</label>
-                        <input type="file" name="certificate" required accept="image/*"
+                        <label class="block text-xs font-bold text-slate-700 mb-2 ml-1">Unggah Foto Toko / Gerai Depot (.jpg, .png) *</label>
+                        <input type="file" name="cover_image" required accept="image/*"
+                            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs font-medium text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand-600 file:text-white hover:file:bg-brand-700 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-2 ml-1">Unggah Sertifikat / Bukti Lab (.jpg, .png, .pdf) *</label>
+                        <input type="file" name="certificate" required accept=".pdf,image/*"
                             class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs font-medium text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-slate-800 file:text-white hover:file:bg-slate-700 focus:outline-none">
                     </div>
                 </div>
@@ -122,4 +141,38 @@
         </div>
     </div>
 </div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const latInput = document.getElementById('regLat');
+        const lngInput = document.getElementById('regLng');
+        const initLat = parseFloat(latInput.value) || -7.2891660;
+        const initLng = parseFloat(lngInput.value) || 112.7343980;
+
+        const map = L.map('registerMap').setView([initLat, initLng], 13);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        const marker = L.marker([initLat, initLng], { draggable: true }).addTo(map);
+
+        function updateCoords(lat, lng) {
+            latInput.value = lat.toFixed(7);
+            lngInput.value = lng.toFixed(7);
+        }
+
+        marker.on('dragend', function (e) {
+            const pos = marker.getLatLng();
+            updateCoords(pos.lat, pos.lng);
+        });
+
+        map.on('click', function (e) {
+            marker.setLatLng(e.latlng);
+            updateCoords(e.latlng.lat, e.latlng.lng);
+        });
+    });
+</script>
 @endsection

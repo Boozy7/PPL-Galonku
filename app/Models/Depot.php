@@ -13,6 +13,7 @@ class Depot extends Model
     protected $casts = [
         'is_open' => 'boolean',
         'is_certified' => 'boolean',
+        'is_approved' => 'boolean',
         'is_lab_passed' => 'boolean',
         'rating' => 'float',
         'lat' => 'float',
@@ -38,6 +39,11 @@ class Depot extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class)->latest();
+    }
+
+    public function complaints(): HasMany
+    {
+        return $this->hasMany(Complaint::class)->latest();
     }
 
     /**

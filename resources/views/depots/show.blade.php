@@ -29,7 +29,9 @@
         <!-- Hero Header Banner -->
         <div class="relative bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden mb-6">
             <div class="h-64 sm:h-80 w-full relative">
-                <img src="{{ asset('images/images.jpg') }}" alt="{{ $depot->name }}" class="w-full h-full object-cover">
+                <img src="{{ $depot->cover_image ? (str_starts_with($depot->cover_image, 'http') ? $depot->cover_image : asset($depot->cover_image)) : asset('images/images.jpg') }}"
+                     onerror="this.onerror=null; this.src='{{ asset('images/images.jpg') }}';"
+                     alt="{{ $depot->name }}" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/40 to-transparent"></div>
 
                 <!-- Badges on top -->
@@ -89,6 +91,15 @@
                             Hubungi WhatsApp
                         </a>
                     @endif
+
+                    <!-- Report Problematic Water (SCRUM-70) -->
+                    <a href="{{ route('complaints.create', ['depot_id' => $depot->id]) }}"
+                        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold hover:bg-rose-100 transition">
+                        <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        Laporkan Air Bermasalah
+                    </a>
                 </div>
 
                 <!-- Order Refill Button -->

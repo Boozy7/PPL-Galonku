@@ -17,6 +17,11 @@ class AuthController extends Controller
         return view('auth.login', ['type' => 'depot']);
     }
 
+    public function showDinkesLogin()
+    {
+        return view('auth.login', ['type' => 'dinkes']);
+    }
+
     public function showUserRegister()
     {
         return view('auth.register');
@@ -57,7 +62,10 @@ class AuthController extends Controller
             'district' => 'required|string|max:255',
             'address' => 'required|string',
             'phone' => 'required|string|max:20',
-            'certificate' => 'required|image|max:5120',
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
+            'cover_image' => 'required|image|max:5120',
+            'certificate' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         $user = \App\Models\User::create([
@@ -67,24 +75,54 @@ class AuthController extends Controller
             'role' => 'depot'
         ]);
 
-        $path = $request->file('certificate')->store('certificates', 'public');
+        $certPath = $request->file('certificate')->store('certificates', 'public');
+        $storePhotoPath = $request->file('cover_image')->store('depots', 'public');
 
-        \App\Models\Depot::create([
+        $depot = \App\Models\Depot::create([
             'user_id' => $user->id,
             'slug' => \Illuminate\Support\Str::slug($data['depot_name']) . '-' . uniqid(),
             'name' => $data['depot_name'],
+            'tagline' => 'Depot Air Minum Isi Ulang Higienis Surabaya',
             'district' => $data['district'],
             'address' => $data['address'],
             'phone' => $data['phone'],
             'whatsapp' => preg_replace('/[^0-9]/', '', $data['phone']),
-            'lat' => -7.250445,
-            'lng' => 112.768845,
+            'lat' => (float) $data['lat'],
+            'lng' => (float) $data['lng'],
+            'cover_image' => '/storage/' . $storePhotoPath,
+            'certificate_document_path' => '/storage/' . $certPath,
             'is_certified' => false,
-            'certification_status' => 'BELUM_TERSERTIFIKASI'
+            'is_approved' => false,
+            'certification_status' => 'BELUM_TERSERTIFIKASI',
+            'open_hours' => '08:00 - 20:00 WIB • Setiap Hari',
+            'is_open' => true,
+            'facilities' => [
+                'Filtrasi Multi-Stage & Sinar UV',
+                'Pencucian Galon Higienis',
+            ],
+        ]);
+
+        // Buat 2 produk air default agar pelanggan bisa langsung memesan setelah di-ACC Dinkes
+        \App\Models\WaterProduct::create([
+            'depot_id' => $depot->id,
+            'name' => 'Air Mineral Standar',
+            'type' => 'mineral',
+            'price' => 6000,
+            'description' => 'Air mineral pegunungan steril melalui filtrasi mikro & sinar UV.',
+            'tds_avg' => 30,
+        ]);
+
+        \App\Models\WaterProduct::create([
+            'depot_id' => $depot->id,
+            'name' => 'Air RO Ultra-Pure',
+            'type' => 'ro',
+            'price' => 8000,
+            'description' => 'Air murni Reverse Osmosis (RO) membran 0.0001 mikron dengan TDS ekstra rendah.',
+            'tds_avg' => 15,
         ]);
 
         Auth::login($user);
-        return redirect('/depot')->with('success', 'Pendaftaran berhasil. Silakan tunggu verifikasi Dinkes atas sertifikat Anda.');
+        return redirect('/depot')->with('success', 'Pendaftaran depot berhasil dikirim! Menunggu ACC & verifikasi berkas dari Dinas Kesehatan sebelum tampil ke pelanggan.');
     }
 
     public function authenticate(Request $request)
@@ -92,11 +130,7 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
-<<<<<<< HEAD
-            'type' => ['required', 'in:user,depot']
-=======
-            'type' => ['required', 'in:user,depot,dinkes'] // <-- Ditambahkan 'dinkes'
->>>>>>> 97a7321 (feat(dinkes): verifikasi dokumen uji lab dan aktivasi badge resmi SLHS (SCRUM-67))
+            'type' => ['required', 'in:user,depot,dinkes']
         ]);
 
         // Require role to match the login portal type
@@ -104,13 +138,9 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
 
-<<<<<<< HEAD
-            if ($user->role === 'depot') {
-=======
             if ($user->role === 'dinkes') {
-                return redirect()->intended('/dinkes'); // <-- Redirect ke Portal Dinkes
+                return redirect()->intended('/dinkes');
             } elseif ($user->role === 'depot') {
->>>>>>> 97a7321 (feat(dinkes): verifikasi dokumen uji lab dan aktivasi badge resmi SLHS (SCRUM-67))
                 return redirect()->intended('/depot');
             }
 

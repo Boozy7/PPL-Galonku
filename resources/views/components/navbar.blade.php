@@ -2,9 +2,18 @@
     <div class="w-full px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
 
+            @php
+                $userRole = auth()->check() ? auth()->user()->role : null;
+                $brandUrl = match ($userRole) {
+                    'dinkes' => route('dinkes.dashboard'),
+                    'depot' => route('depot.dashboard'),
+                    default => route('home'),
+                };
+            @endphp
+
             <!-- Brand Logo -->
             <div class="flex items-center gap-3">
-                <a href="{{ route('home') }}" class="flex items-center gap-2.5 sm:gap-3 group">
+                <a href="{{ $brandUrl }}" class="flex items-center gap-2.5 sm:gap-3 group">
                     <!-- Galonku Symbol Icon -->
                     <img src="{{ asset('images/logo-symbol.png') }}" alt="Galonku Icon"
                         class="h-10 sm:h-11 w-auto object-contain group-hover:scale-105 transition-transform duration-200">
@@ -22,36 +31,50 @@
 
             <!-- Navigation Links -->
             <nav class="hidden md:flex items-center gap-1">
-                <a href="{{ route('depots.index') }}"
-                    class="px-3.5 py-2 text-sm font-semibold rounded-xl transition-colors {{ request()->routeIs('depots.*') || request()->is('/') ? 'text-brand-700 bg-brand-50/80 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
-                    Peta & Depot (GPS)
-                </a>
+                @if ($userRole === 'dinkes')
+                    <a href="{{ route('dinkes.dashboard') }}"
+                        class="px-3.5 py-2 text-sm font-semibold rounded-xl transition-colors {{ request()->routeIs('dinkes.*') ? 'text-emerald-700 bg-emerald-50/80 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+                        Dashboard &amp; Peta Monitoring Kota
+                    </a>
+                @elseif ($userRole === 'depot')
+                    <a href="{{ route('depot.dashboard') }}"
+                        class="px-3.5 py-2 text-sm font-semibold rounded-xl transition-colors {{ request()->routeIs('depot.dashboard') ? 'text-brand-700 bg-brand-50/80 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+                        Dasbor Mitra Depot
+                    </a>
+                @else
+                    <a href="{{ route('depots.index') }}"
+                        class="px-3.5 py-2 text-sm font-semibold rounded-xl transition-colors {{ request()->routeIs('depots.*') || request()->is('/') ? 'text-brand-700 bg-brand-50/80 font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}">
+                        Peta &amp; Depot (GPS)
+                    </a>
+                @endif
             </nav>
 
             <!-- Action Buttons -->
             <div class="flex items-center gap-2.5">
 
-                <a href="{{ route('complaints.create') }}"
-                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl transition border border-rose-200">
-                    <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <span>Lapor Air</span>
-                </a>
+                @if (!$userRole || $userRole === 'user')
+                    <a href="{{ route('complaints.create') }}"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl transition border border-rose-200">
+                        <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>Lapor Air</span>
+                    </a>
 
-                <!-- Check Order Status Direct Link -->
-                <a href="{{ route('orders.index') }}"
-                    class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-brand-50 hover:text-brand-800 rounded-xl transition border border-slate-200/80 shadow-sm">
-                    <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    <span>Cek Antrean</span>
-                    @if (!empty($navbarActiveCount) && $navbarActiveCount > 0)
-                        <span class="w-2 h-2 rounded-full bg-brand-600 animate-ping"></span>
-                    @endif
-                </a>
+                    <!-- Check Order Status Direct Link -->
+                    <a href="{{ route('orders.index') }}"
+                        class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-brand-50 hover:text-brand-800 rounded-xl transition border border-slate-200/80 shadow-sm">
+                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span>Cek Antrean</span>
+                        @if (!empty($navbarActiveCount) && $navbarActiveCount > 0)
+                            <span class="w-2 h-2 rounded-full bg-brand-600 animate-ping"></span>
+                        @endif
+                    </a>
+                @endif
 
                 <!-- Dinkes Certified Indicator Badge -->
                 <div

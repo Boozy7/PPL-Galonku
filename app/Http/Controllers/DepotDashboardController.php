@@ -40,13 +40,7 @@ class DepotDashboardController extends Controller
         // Manajemen Katalog Produk & Layanan
         $products = WaterProduct::where('depot_id', $depot->id)->orderBy('id', 'asc')->get();
 
-<<<<<<< HEAD
         // Metrik Rekapitulasi Penjualan (SCRUM-66)
-=======
-        // ==========================================================
-        // PINDAHKAN LOGIKA METRIK KE SINI (DI DALAM METHOD INDEX)
-        // ==========================================================
->>>>>>> ec81d9c61442cda98be6b0e728e44a986275a041
         $todayRevenue = Order::where('depot_id', $depot->id)
             ->whereDate('created_at', today())
             ->where('status', '!=', 'BATAL')

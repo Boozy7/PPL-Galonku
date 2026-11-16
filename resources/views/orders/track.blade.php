@@ -60,111 +60,65 @@
                                     @endif
                                 </div>
                                 <span class="text-[10px] sm:text-xs font-bold mt-2 {{ $stepIndex <= $currentStep ? 'text-white' : 'text-slate-400' }}">
-                                    {{ $step->label ?? $step['label'] }}
+                                    {{ $step['label'] }}
                                 </span>
                             </div>
-<<<<<<< HEAD
-                            <span class="text-xs font-bold {{ $isCurrent ? 'text-brand-700' : ($isPassed ? 'text-slate-800' : 'text-slate-400') }}">
-                                {{ $step['label'] }}
-                            </span>
-                            <span class="text-[10px] text-slate-400 hidden sm:block">
-                                {{ $step['desc'] }}
-                            </span>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
-            <!-- Status Banner Message -->
-            @php
-                $statusBanner = match($order->status) {
-                    'SEDANG_DIISI' => [
-                        'dot' => 'bg-amber-500 animate-pulse',
-                        'title' => 'Status Saat Ini: Diproses (Sedang Disterilisasi & Diisi)',
-                        'desc' => 'Galon sedang diproses di mesin sterilisasi otomatis oleh operator depot.',
-                        'btn' => 'Simulasi Status →',
-                    ],
-                    'SIAP_DIAMBIL' => [
-                        'dot' => 'bg-emerald-500 animate-ping',
-                        'title' => 'Status Saat Ini: Siap Diambil di Depot!',
-                        'desc' => 'Galon sudah selesai diisi & disegel. Tunjukkan PIN ' . $order->pickup_pin . ' ke kasir depot.',
-                        'btn' => 'Simulasi Status →',
-                    ],
-                    'SELESAI' => [
-                        'dot' => 'bg-emerald-600',
-                        'title' => 'Status Saat Ini: Pesanan Selesai',
-                        'desc' => 'Galon telah diambil. Terima kasih telah menggunakan layanan Galonku!',
-                        'btn' => 'Reset Simulasi ↺',
-                    ],
-                    default => [
-                        'dot' => 'bg-brand-600',
-                        'title' => 'Status Saat Ini: Menunggu Antrean (Diterima)',
-                        'desc' => 'Menunggu giliran antrean pengisian (Estimasi ambil: ' . ($order->pickup_time_estimated ?? '15-30 Menit Lagi') . ').',
-                        'btn' => 'Simulasi Status →',
-                    ],
-                };
-            @endphp
-            <div class="mt-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <span class="w-3 h-3 rounded-full flex-shrink-0 {{ $statusBanner['dot'] }}"></span>
-                    <div>
-                        <span class="text-xs font-bold block">{{ $statusBanner['title'] }}</span>
-                        <p class="text-[11px] text-slate-500">{{ $statusBanner['desc'] }}</p>
-                    </div>
-                </div>
-
-                <!-- Simulation button: Advances 1 -> 2 -> 3 -> 4 (and resets after 4) -->
-                <form action="{{ route('orders.advance', $order->order_number) }}" method="POST">
-                    @csrf
-                    <button type="submit" title="Klik untuk simulasi tahap status berikutnya"
-                            class="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-[10px] font-bold transition flex items-center gap-1 flex-shrink-0">
-                        <span>{{ $statusBanner['btn'] }}</span>
-                    </button>
-                </form>
-=======
                         @endforeach
                     </div>
                 </div>
->>>>>>> ec81d9c61442cda98be6b0e728e44a986275a041
             </div>
         </div>
 
-<<<<<<< HEAD
-        <!-- DESTINATION & GOOGLE MAPS NAVIGATION BUTTON -->
-        <div class="p-6 sm:p-8 bg-slate-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Lokasi Pengambilan Depot</span>
-                <h3 class="text-base font-extrabold text-slate-900">{{ $order->depot->name }}</h3>
-                <p class="text-xs text-slate-500">{{ $order->depot->address }} (Kec. {{ $order->depot->district }})</p>
-                <p class="text-xs text-emerald-600 font-semibold mt-1">Buka: {{ $order->depot->open_hours }}</p>
+        <!-- LIVE STATUS BANNER & SIMULATION -->
+        @php
+            $statusBanner = match($order->status) {
+                'SEDANG_DIISI' => [
+                    'dot' => 'bg-amber-500 animate-pulse',
+                    'title' => 'Status Saat Ini: Sedang Diproses (Sterilisasi UV & Isi Air)',
+                    'desc' => 'Galon sedang diproses di mesin sterilisasi otomatis oleh operator depot.',
+                    'btn' => 'Simulasi Status →',
+                ],
+                'SIAP_DIAMBIL' => [
+                    'dot' => 'bg-emerald-500 animate-ping',
+                    'title' => 'Status Saat Ini: Siap Diambil di Depot!',
+                    'desc' => 'Galon sudah selesai diisi & disegel. Tunjukkan PIN ' . $order->pickup_pin . ' ke kasir depot.',
+                    'btn' => 'Simulasi Status →',
+                ],
+                'SELESAI' => [
+                    'dot' => 'bg-emerald-600',
+                    'title' => 'Status Saat Ini: Pesanan Selesai',
+                    'desc' => 'Galon telah diambil. Anda dapat memberikan ulasan higienitas untuk depot ini.',
+                    'btn' => 'Reset Simulasi ↺',
+                ],
+                default => [
+                    'dot' => 'bg-brand-600',
+                    'title' => 'Status Saat Ini: Menunggu Antrean (Diterima)',
+                    'desc' => 'Menunggu giliran antrean pengisian (Estimasi ambil: ' . ($order->pickup_time_estimated ?? '15-30 Menit Lagi') . ').',
+                    'btn' => 'Simulasi Status →',
+                ],
+            };
+        @endphp
+        <div class="px-6 sm:px-7 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full flex-shrink-0 {{ $statusBanner['dot'] }}"></span>
+                <div>
+                    <span class="text-xs font-bold text-slate-900 block">{{ $statusBanner['title'] }}</span>
+                    <p class="text-[11px] text-slate-500">{{ $statusBanner['desc'] }}</p>
+                </div>
             </div>
-
-            <!-- Direct Google Maps Turn-by-Turn Navigation -->
-            <a href="{{ $order->google_maps_url }}"
-               target="_blank"
-               rel="noopener noreferrer"
-               class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 transition flex-shrink-0">
-                <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                </svg>
-                <span>Buka Rute di Google Maps</span>
-            </a>
+            <form action="{{ route('orders.advance', $order->order_number) }}" method="POST">
+                @csrf
+                <button type="submit" title="Klik untuk simulasi tahap status berikutnya"
+                        class="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-[10px] font-bold transition flex items-center gap-1 flex-shrink-0">
+                    <span>{{ $statusBanner['btn'] }}</span>
+                </button>
+            </form>
         </div>
 
-    </div>
-
-    <!-- ORDER SUMMARY DETAILS -->
-    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
-        <h3 class="text-sm font-bold text-slate-900 mb-4">Rincian Pesanan</h3>
-
-        <div class="space-y-3 mb-6">
-            <div class="flex items-center justify-between text-xs py-2 border-b border-slate-100">
-=======
         <!-- Current Status & Polling Indicator -->
         <div class="p-6 bg-slate-50 border-b border-slate-200/80 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-3 h-3 rounded-full bg-brand-500 animate-ping"></div>
->>>>>>> 97a7321 (feat(dinkes): verifikasi dokumen uji lab dan aktivasi badge resmi SLHS (SCRUM-67))
                 <div>
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Status Terkini</span>
                     <span class="text-sm font-extrabold text-slate-900">{{ $order->status_label }}</span>
