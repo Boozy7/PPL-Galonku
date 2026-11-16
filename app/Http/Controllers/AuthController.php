@@ -92,7 +92,11 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
+<<<<<<< HEAD
             'type' => ['required', 'in:user,depot']
+=======
+            'type' => ['required', 'in:user,depot,dinkes'] // <-- Ditambahkan 'dinkes'
+>>>>>>> 97a7321 (feat(dinkes): verifikasi dokumen uji lab dan aktivasi badge resmi SLHS (SCRUM-67))
         ]);
 
         // Require role to match the login portal type
@@ -100,7 +104,13 @@ class AuthController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
 
+<<<<<<< HEAD
             if ($user->role === 'depot') {
+=======
+            if ($user->role === 'dinkes') {
+                return redirect()->intended('/dinkes'); // <-- Redirect ke Portal Dinkes
+            } elseif ($user->role === 'depot') {
+>>>>>>> 97a7321 (feat(dinkes): verifikasi dokumen uji lab dan aktivasi badge resmi SLHS (SCRUM-67))
                 return redirect()->intended('/depot');
             }
 

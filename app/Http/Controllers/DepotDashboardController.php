@@ -40,7 +40,13 @@ class DepotDashboardController extends Controller
         // Manajemen Katalog Produk & Layanan
         $products = WaterProduct::where('depot_id', $depot->id)->orderBy('id', 'asc')->get();
 
+<<<<<<< HEAD
         // Metrik Rekapitulasi Penjualan (SCRUM-66)
+=======
+        // ==========================================================
+        // PINDAHKAN LOGIKA METRIK KE SINI (DI DALAM METHOD INDEX)
+        // ==========================================================
+>>>>>>> ec81d9c61442cda98be6b0e728e44a986275a041
         $todayRevenue = Order::where('depot_id', $depot->id)
             ->whereDate('created_at', today())
             ->where('status', '!=', 'BATAL')
@@ -138,26 +144,54 @@ class DepotDashboardController extends Controller
         $depot = Depot::where('user_id', Auth::id())->firstOrFail();
         $order = Order::where('depot_id', $depot->id)->findOrFail($id);
 
+        $request->validate([
+            'pin' => 'required|string|size:4',
+        ]);
+
+        if ($request->pin !== $order->pickup_pin) {
+            return back()->withErrors(['pin' => "PIN pengambilan salah! Pastikan PIN sesuai dengan tiket pelanggan ({$order->queue_number})."]);
+        }
+
         $order->status = 'SELESAI';
         $order->save();
 
-        return back()->with('success', "Pesanan {$order->queue_number} telah selesai dan galon sudah diambil.");
+        return back()->with('success', "Pesanan {$order->queue_number} telah selesai! PIN cocok dan galon sudah diambil.");
     }
 
+    /**
+     * Unggah Dokumen Hasil Lab Berkala & Sertifikat SLHS ke Dinkes (SCRUM-65)
+     */
     public function uploadCert(Request $request)
     {
         $depot = Depot::where('user_id', Auth::id())->firstOrFail();
 
-        $request->validate([
-            'certificate' => 'required|image|max:5120'
+        $validated = $request->validate([
+            'certificate' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // Maks 5MB (PDF / Gambar)
+            'lab_name' => 'nullable|string|max:150',
+            'test_date' => 'nullable|date',
+            'notes' => 'nullable|string|max:500',
         ]);
 
+        // Simpan file ke storage public (storage/app/public/certificates)
         $path = $request->file('certificate')->store('certificates', 'public');
 
-        $depot->certification_status = 'PROSES_RENEWAL';
+        // Update data sertifikasi & dokumen lab pada depot
+        $depot->certificate_document_path = '/storage/' . $path;
+        $depot->certification_status = 'PROSES_RENEWAL'; // Mengubah status agar masuk ke antrean Dinkes
+
+        if (!empty($validated['lab_name'])) {
+            $depot->lab_name = $validated['lab_name'];
+        }
+        if (!empty($validated['test_date'])) {
+            $depot->last_tested_date = date('d F Y', strtotime($validated['test_date']));
+        }
+        if (!empty($validated['notes'])) {
+            $depot->certificate_notes = $validated['notes'];
+        }
+
         $depot->save();
 
-        return back()->with('success', 'Sertifikat baru berhasil diunggah.');
+        return back()->with('success', 'Dokumen hasil uji lab & permohonan sertifikasi berhasil diunggah! Status depot kini "Dalam Proses Verifikasi Dinkes".');
     }
 
     // ==========================================

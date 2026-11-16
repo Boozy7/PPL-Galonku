@@ -21,7 +21,17 @@ class DatabaseSeeder extends Seeder
             DepotBatchSeeder::class,
         ]);
 
-        // Depot Owner (Mitra Demo)
+        // 1. Akun Admin Dinkes Surabaya
+        User::updateOrCreate(
+            ['email' => 'admin@dinkes.surabaya.go.id'],
+            [
+                'name' => 'Admin Dinkes Surabaya',
+                'password' => bcrypt('password'),
+                'role' => 'dinkes',
+            ]
+        );
+
+        // 2. Depot Owner (Mitra Demo) - langsung dihubungkan ke Depot #1
         $depotUser = User::updateOrCreate(
             ['email' => 'mitra@galonku.com'],
             [
@@ -31,7 +41,12 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Warga / Consumer
+        $firstDepot = \App\Models\Depot::orderBy('id', 'asc')->first();
+        if ($firstDepot) {
+            $firstDepot->update(['user_id' => $depotUser->id]);
+        }
+
+        // 3. Warga / Consumer
         User::updateOrCreate(
             ['email' => 'warga@example.com'],
             [
