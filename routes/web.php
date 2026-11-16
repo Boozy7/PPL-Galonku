@@ -6,6 +6,7 @@ use App\Http\Controllers\DepotDashboardController;
 use App\Http\Controllers\DinkesDashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ComplaintController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -71,3 +72,8 @@ Route::middleware(['auth', 'role:dinkes'])->prefix('dinkes')->name('dinkes.')->g
     Route::post('/depot/{id}/approve', [DinkesDashboardController::class, 'approveDepot'])->name('approve_depot');
     Route::post('/depot/{id}/reject', [DinkesDashboardController::class, 'rejectDepot'])->name('reject_depot');
 });
+
+// Kanal Pengaduan Kualitas Air ke Dinkes (SCRUM-70)
+Route::get('/lapor', [ComplaintController::class, 'create'])->name('complaints.create');
+Route::post('/lapor', [ComplaintController::class, 'store'])->name('complaints.store');
+Route::get('/lapor/sukses/{ticket}', [ComplaintController::class, 'success'])->name('complaints.success');
