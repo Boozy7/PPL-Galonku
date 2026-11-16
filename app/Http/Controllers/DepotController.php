@@ -46,16 +46,21 @@ class DepotController extends Controller
         }
 
         // Sorting
-        $sort = $request->input('sort', 'rating_desc');
+        $sort = $request->input('sort', 'name_asc');
         if ($sort === 'rating_desc') {
             $query->orderByDesc('rating')->orderByDesc('review_count');
-        } elseif ($sort === 'rating_asc') {
-            $query->orderBy('rating');
         } elseif ($sort === 'name_asc') {
             $query->orderBy('name');
         }
 
         $depots = $query->get();
+
+        // Optional: If sorting by lowest product price
+        if ($sort === 'price_asc') {
+            $depots = $depots->sortBy(function ($d) {
+                return $d->products->min('price') ?? 999999;
+            })->values();
+        }
 
         // Optional: If user passed lat & lng, calculate distance for each depot
         $userLat = $request->input('lat');
@@ -122,13 +127,11 @@ class DepotController extends Controller
     }
 
     /**
-     * Display single depot details (Dinkes certificate, lab test, water products, reviews).
+     * Display single depot details (Dinkes certificate, lab test, water products).
      */
     public function show(string $slug)
     {
-        $query = Depot::with(['products', 'reviews' => function ($q) {
-            $q->orderByDesc('created_at');
-        }])->where('slug', $slug);
+        $query = Depot::with(['products', 'reviews'])->where('slug', $slug);
 
         if (is_numeric($slug)) {
             $query->orWhere('id', $slug);

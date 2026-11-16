@@ -15,11 +15,29 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Depot Owner (Mitra)
+        $depotUser = User::updateOrCreate(
+            ['email' => 'mitra@galonku.com'],
+            [
+                'name' => 'Budi Pemilik Depot',
+                'password' => bcrypt('password'),
+                'role' => 'depot',
+            ]
+        );
+
+        // Warga / Consumer
+        User::updateOrCreate(
+            ['email' => 'warga@example.com'],
+            [
+                'name' => 'Warga Surabaya',
+                'password' => bcrypt('password'),
+                'role' => 'user',
+            ]
+        );
+
+        $this->call([
+            DepotBatchSeeder::class,
         ]);
     }
 }
