@@ -4,8 +4,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DepotController;
 use App\Http\Controllers\DepotDashboardController;
 use App\Http\Controllers\OrderController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ReviewController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,9 +47,14 @@ Route::middleware(['auth', 'role:depot'])->prefix('depot')->name('depot.')->grou
     Route::post('/operational-hours', [DepotDashboardController::class, 'updateOperationalHours'])->name('update_operational_hours');
     Route::post('/order/{id}/status', [DepotDashboardController::class, 'updateOrderStatus'])->name('update_order_status');
     Route::post('/order/{id}/finish', [DepotDashboardController::class, 'finishOrder'])->name('finish_order');
+
+    // SCRUM-65: Upload Sertifikat & Hasil Lab (Punya Zidane)
     Route::post('/cert/upload', [DepotDashboardController::class, 'uploadCert'])->name('upload_cert');
 
-    // Katalog Produk & Layanan Depot
+    // SCRUM-66: Ekspor Rekapitulasi Laporan CSV (Punya Zidane)
+    Route::get('/report/export', [DepotDashboardController::class, 'exportReport'])->name('report.export');
+
+    // Manajemen Produk
     Route::post('/products', [DepotDashboardController::class, 'storeProduct'])->name('products.store');
     Route::put('/products/{id}', [DepotDashboardController::class, 'updateProduct'])->name('products.update');
     Route::delete('/products/{id}', [DepotDashboardController::class, 'deleteProduct'])->name('products.destroy');
