@@ -12,7 +12,7 @@ class DepotController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Depot::with(['products']);
+        $query = Depot::with(['products', 'user'])->where('is_approved', true);
 
         // Search by name, address, or district
         if ($search = $request->input('search')) {
@@ -55,6 +55,23 @@ class DepotController extends Controller
 
         $depots = $query->get();
 
+        // Prioritaskan urutan demo:
+        // 1. Depot terhubung akun demo utama (mitra@galonku.com)
+        // 2. Depot pendaftar baru yang sudah di-ACC Dinkes
+        // 3. Depot lainnya
+        if ($sort === 'name_asc') {
+            $depots = $depots->sortBy(function ($d) {
+                $email = $d->user?->email ?? '';
+                if ($email === 'mitra@galonku.com') {
+                    return [0, 0, $d->name];
+                }
+                if ($email !== '' && !str_ends_with($email, '@galonku.id')) {
+                    return [1, $d->id, $d->name];
+                }
+                return [2, 0, $d->name];
+            })->values();
+        }
+
         // Optional: If sorting by lowest product price
         if ($sort === 'price_asc') {
             $depots = $depots->sortBy(function ($d) {
@@ -83,7 +100,7 @@ class DepotController extends Controller
         }
 
         // Unique districts for filter dropdown
-        $districts = Depot::distinct()->pluck('district')->sort()->values();
+        $districts = Depot::where('is_approved', true)->distinct()->pluck('district')->sort()->values();
 
         // Prepare map pins payload
         $mapDepots = $depots->map(function ($d) {
@@ -139,6 +156,10 @@ class DepotController extends Controller
 
         $depot = $query->firstOrFail();
 
+        if (!$depot->is_approved && (!auth()->check() || (auth()->user()->role !== 'dinkes' && auth()->id() !== $depot->user_id))) {
+            abort(404);
+        }
+
         return view('depots.show', [
             'depot' => $depot,
         ]);
@@ -152,7 +173,21 @@ class DepotController extends Controller
         $userLat = $request->input('lat');
         $userLng = $request->input('lng');
 
-        $depots = Depot::with('products')->get()->map(function ($d) use ($userLat, $userLng) {
+        $depots = Depot::with(['products', 'user'])
+            ->where('is_approved', true)
+            ->get()
+            ->sortBy(function ($d) {
+                $email = $d->user?->email ?? '';
+                if ($email === 'mitra@galonku.com') {
+                    return [0, 0, $d->name];
+                }
+                if ($email !== '' && !str_ends_with($email, '@galonku.id')) {
+                    return [1, $d->id, $d->name];
+                }
+                return [2, 0, $d->name];
+            })
+            ->values()
+            ->map(function ($d) use ($userLat, $userLng) {
             $distance = null;
             if ($userLat && $userLng) {
                 $distance = $this->haversineGreatCircleDistance(

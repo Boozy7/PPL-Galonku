@@ -33,8 +33,6 @@ class OrderController extends Controller
             'customer_phone' => 'required|string|max:20',
             'pickup_time' => 'nullable|string|max:50',
             'gallon_action' => 'required|in:bawa_sendiri,beli_baru,tukar_galon',
-            'delivery_type' => 'required|in:pickup,delivery',
-            'delivery_address' => 'required_if:delivery_type,delivery|nullable|string|max:500',
             'notes' => 'nullable|string|max:500',
             'products' => 'required|array|min:1',
             'products.*.id' => 'required|exists:water_products,id',
@@ -77,14 +75,9 @@ class OrderController extends Controller
             $newGallonFee = ($depot->new_gallon_fee ?? 35000) * $totalQuantity;
         }
 
-        // Kalkulasi Biaya Ongkir Otomatis (SCRUM-63)
+        // Sistem murni Self-Pickup (Ambil Sendiri di Depot) - Tanpa Biaya Antar
         $deliveryFee = 0;
-        if ($validated['delivery_type'] === 'delivery') {
-            // Promo: Pesan 3 galon ke atas Gratis Ongkir! Di bawah itu Rp 5.000
-            $deliveryFee = $totalQuantity >= 3 ? 0 : 5000;
-        }
-
-        $totalPrice = $waterSubtotal + $newGallonFee + $deliveryFee;
+        $totalPrice = $waterSubtotal + $newGallonFee;
 
         // Generate Nomor Antrean e.g. #A-18
         $todayOrderCount = Order::whereDate('created_at', today())->count();
@@ -111,9 +104,9 @@ class OrderController extends Controller
             'quantity' => $totalQuantity,
             'gallon_option' => $validated['gallon_action'] === 'beli_baru' ? 'new_gallon' : 'bring_own',
             'gallon_fee' => $newGallonFee,
-            'delivery_type' => $validated['delivery_type'],
-            'delivery_fee' => $deliveryFee,
-            'delivery_address' => $validated['delivery_address'] ?? null,
+            'delivery_type' => 'pickup',
+            'delivery_fee' => 0,
+            'delivery_address' => null,
             'total_amount' => $totalPrice,
             'pickup_time_estimated' => $validated['pickup_time'] ?? '15-30 Menit Lagi',
             'pickup_pin' => $pickupPin,
@@ -136,18 +129,25 @@ class OrderController extends Controller
     {
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
 
-        // Alur antrean status
+        // Alur antrean status berurutan 1 -> 2 -> 3 -> 4 (lalu reset ke 1 untuk demo)
         if ($order->status === 'DITERIMA') {
             $order->status = 'SEDANG_DIISI';
-            $order->save();
-            return redirect()->route('orders.track', $order->order_number)
-                ->with('status_updated', "Status antrean diperbarui: Diproses (Sedang Disterilisasi & Diisi).");
+            $message = 'Status antrean diperbarui: 2. Sedang Diproses (Sterilisasi UV & Isi Air).';
+        } elseif ($order->status === 'SEDANG_DIISI') {
+            $order->status = 'SIAP_DIAMBIL';
+            $message = 'Status antrean diperbarui: 3. Siap Diambil! Silakan tunjukkan PIN ke kasir depot.';
+        } elseif ($order->status === 'SIAP_DIAMBIL') {
+            $order->status = 'SELESAI';
+            $message = 'Status antrean diperbarui: 4. Pesanan Selesai diambil.';
         } else {
             $order->status = 'DITERIMA';
-            $order->save();
-            return redirect()->route('orders.track', $order->order_number)
-                ->with('status_updated', "Status antrean direset ke: Menunggu Antrean (Diterima).");
+            $message = 'Simulasi direset ke: 1. Menunggu Antrean (Diterima).';
         }
+
+        $order->save();
+
+        return redirect()->route('orders.track', $order->order_number)
+            ->with('status_updated', $message);
     }
 
     /**

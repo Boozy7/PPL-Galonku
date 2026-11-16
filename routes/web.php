@@ -57,10 +57,10 @@ Route::middleware(['auth', 'role:depot'])->prefix('depot')->name('depot.')->grou
     // SCRUM-65: Upload Sertifikat & Hasil Lab
     Route::post('/cert/upload', [DepotDashboardController::class, 'uploadCert'])->name('upload_cert');
 
-    // SCRUM-66: Ekspor Rekapitulasi Laporan CSV
+    // SCRUM-66: Laporan Rekapitulasi Penjualan & Ekspor CSV
     Route::get('/report/export', [DepotDashboardController::class, 'exportReport'])->name('report.export');
 
-    // Manajemen Produk
+    // Katalog Produk & Layanan Depot
     Route::post('/products', [DepotDashboardController::class, 'storeProduct'])->name('products.store');
     Route::put('/products/{id}', [DepotDashboardController::class, 'updateProduct'])->name('products.update');
     Route::delete('/products/{id}', [DepotDashboardController::class, 'deleteProduct'])->name('products.destroy');
@@ -72,9 +72,10 @@ Route::middleware(['auth', 'role:dinkes'])->prefix('dinkes')->name('dinkes.')->g
     Route::post('/depot/{id}/approve', [DinkesDashboardController::class, 'approveDepot'])->name('approve_depot');
     Route::post('/depot/{id}/reject', [DinkesDashboardController::class, 'rejectDepot'])->name('reject_depot');
     
-// SCRUM-68: Respon Laporan Aduan & Pencabutan Badge Depot Bermasalah
+// SCRUM-68 & SCRUM-69: Respon Laporan Aduan & Monitoring Status Depot
     Route::post('/complaint/{id}/update', [DinkesDashboardController::class, 'updateComplaint'])->name('update_complaint');
     Route::post('/depot/{id}/revoke-badge', [DinkesDashboardController::class, 'revokeBadge'])->name('revoke_badge');
+    Route::post('/depot/{id}/status', [DinkesDashboardController::class, 'updateDepotStatus'])->name('update_depot_status');
 });
 
 // Kanal Pengaduan Kualitas Air ke Dinkes (SCRUM-70)

@@ -14,7 +14,20 @@ class ComplaintController extends Controller
      */
     public function create(Request $request)
     {
-        $depots = Depot::orderBy('name')->get();
+        $depots = Depot::with('user')
+            ->where('is_approved', true)
+            ->orderBy('name')
+            ->get()
+            ->sortBy(function ($d) {
+                $email = $d->user?->email ?? '';
+                if ($email === 'mitra@galonku.com') {
+                    return [0, 0, $d->name];
+                }
+                if ($email !== '' && !str_ends_with($email, '@galonku.id')) {
+                    return [1, $d->id, $d->name];
+                }
+                return [2, 0, $d->name];
+            })->values();
         $selectedDepotId = $request->query('depot_id');
 
         return view('complaints.create', [

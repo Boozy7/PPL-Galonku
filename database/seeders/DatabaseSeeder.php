@@ -15,8 +15,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-<<<<<<< HEAD
-=======
+        // Jalankan DepotBatchSeeder dulu sebelum membuat akun demo mitra@galonku.com,
+        // karena DepotBatchSeeder membersihkan user role 'depot' terlebih dahulu.
+        $this->call([
+            DepotBatchSeeder::class,
+        ]);
+
         // 1. Akun Admin Dinkes Surabaya
         User::updateOrCreate(
             ['email' => 'admin@dinkes.surabaya.go.id'],
@@ -26,9 +30,8 @@ class DatabaseSeeder extends Seeder
                 'role' => 'dinkes',
             ]
         );
->>>>>>> 97a7321 (feat(dinkes): verifikasi dokumen uji lab dan aktivasi badge resmi SLHS (SCRUM-67))
 
-        // Depot Owner (Mitra)
+        // 2. Depot Owner (Mitra Demo) - langsung dihubungkan ke Depot #1
         $depotUser = User::updateOrCreate(
             ['email' => 'mitra@galonku.com'],
             [
@@ -38,7 +41,12 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Warga / Consumer
+        $firstDepot = \App\Models\Depot::orderBy('id', 'asc')->first();
+        if ($firstDepot) {
+            $firstDepot->update(['user_id' => $depotUser->id]);
+        }
+
+        // 3. Warga / Consumer
         User::updateOrCreate(
             ['email' => 'warga@example.com'],
             [
@@ -47,9 +55,5 @@ class DatabaseSeeder extends Seeder
                 'role' => 'user',
             ]
         );
-
-        $this->call([
-            DepotBatchSeeder::class,
-        ]);
     }
 }
